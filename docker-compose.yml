@@ -1,0 +1,24 @@
+services:
+  anon:
+    image: latentdiff_anon
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+     - "7860:7860"
+    volumes:
+      # masks
+      - /path/to/mask/dir:/data/masks 
+      # images
+      - /path/to/image/dir:/data/images
+      # anonymized (output images)
+      - /path/to/anon/output/dir:/data/anonymized
+      # weights
+      - /path/to/latent_diff_weoghts/dir:/opt/gui/models/Stable-diffusion
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]
