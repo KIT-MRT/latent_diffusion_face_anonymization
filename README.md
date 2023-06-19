@@ -24,7 +24,7 @@ docker compose exec anon python3 /tool/scripts/ldfa_face_anon.py --image_dir=/da
 
 If you are using LDFA in your research, please consider to cite us.
 
-```tex
+```bibtex
 @InProceedings{Klemp_2023_CVPR,
     author    = {Klemp, Marvin and R\"osch, Kevin and Wagner, Royden and Quehl, Jannik and Lauer, Martin},
     title     = {LDFA: Latent Diffusion Face Anonymization for Self-Driving Applications},
