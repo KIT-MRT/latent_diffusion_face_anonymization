@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="CVPRW '23: LDFA: Latent Diffusion Face Anonymization for Self-Driving Applications">
+  <meta name="keywords" content="Latent Diffusion, Anonymization, Data Security">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LDFA: Latent Diffusion Face Anonymization for Self-Driving Applications</title>
+
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+
+          <h1 class="title is-1 publication-title" style="text-align: center;"><img src="static/images/favicon.svg" style="width:50px; height:50px; display: inline;">  LDFA</h1>
+          <h1 class="title is-2 publication-title">Latent Diffusion Face Anonymization for Self-Driving Applications</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://www.mrt.kit.edu/english/mitarbeiter_klemp.php">Marvin Klemp</a><sup>1</sup>,</span>
+            <span class="author-block">
+              <a href="https://www.mrt.kit.edu/english/mitarbeiter_roesch.php">Kevin Rösch</a><sup>1,2</sup>,</span>
+            <span class="author-block">
+              <a href="https://www.mrt.kit.edu/english/mitarbeiter_wagner.php">Royden Wagner</a><sup>1</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://www.mrt.kit.edu/english/alumni_quehl.php">Jannik Quehl</a><sup>1</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://www.mrt.kit.edu/english/mitarbeiter_lauer.php">Martin Lauer</a><sup>1</sup>,
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>Karlsruhe Institute for Technology,</span>
+            <span class="author-block"><sup>2</sup>FZI Research Center for Information Technology</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="https://openaccess.thecvf.com/content/CVPR2023W/E2EAD/papers/Klemp_LDFA_Latent_Diffusion_Face_Anonymization_for_Self-Driving_Applications_CVPRW_2023_paper.pdf"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2302.08931"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/KIT-MRT/latent_diffusion_face_anonymization"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+    <img src="static/images/ldfa_pipeline.svg" width="100%" />
+      <h2 class="subtitle has-text-centered">
+        <span class="dnerf">LDFA</span> detects faces and anonymizes them via stable diffusion.      </h2>
+    </div>
+  </div>
+</section>
+
+
+<section class="hero is-light is-small">
+  <div class="hero-body">
+    <div class="container">
+      <div id="results-carousel" class="carousel results-carousel">
+        <div class="item item-steve">
+          <img src="static/images/ldfa/aachen_000006_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000006_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-chair-tp">
+          <img src="static/images/ldfa/aachen_000015_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000015_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-shiba">
+
+          <img src="static/images/ldfa/aachen_000018_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000018_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-fullbody">
+
+          <img src="static/images/ldfa/aachen_000031_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000031_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-blueshirt">
+
+          <img src="static/images/ldfa/aachen_000039_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000039_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-mask">
+
+          <img src="static/images/ldfa/aachen_000065_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000065_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-coffee">
+          <img src="static/images/ldfa/aachen_000114_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000114_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-toby">
+          <img src="static/images/ldfa/aachen_000128_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000128_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-toby">
+          <img src="static/images/ldfa/aachen_000173_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/aachen_000173_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-toby">
+          <img src="static/images/ldfa/bremen_000067_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/bremen_000067_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-toby">
+          <img src="static/images/ldfa/bremen_000076_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/bremen_000076_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-toby">
+          <img src="static/images/ldfa/bremen_000099_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/bremen_000099_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-toby">
+          <img src="static/images/ldfa/bremen_000100_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/bremen_000100_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-toby">
+          <img src="static/images/ldfa/bremen_000109_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/bremen_000109_000019_leftImg8bit_dfa.png">
+        </div>
+        <div class="item item-toby">
+          <img src="static/images/ldfa/bremen_000216_000019_leftImg8bit.png">
+          <img src="static/images/ldfa/bremen_000216_000019_leftImg8bit_dfa.png">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+            <p>In order to protect vulnerable road users (VRUs), such as
+            pedestrians or cyclists, it is essential that intelligent trans-
+            portation systems (ITS) accurately identify them. Therefore,
+            datasets used to train perception models of ITS must con-
+            tain a significant number of vulnerable road users. How-
+            ever, data protection regulations require that individuals are
+            anonymized in such datasets.</p>
+            <p>In this work, we introduce a novel deep learning-based pipeline for face anonymization in
+            the context of ITS. In contrast to related methods, we do not
+            use generative adversarial networks (GANs) but build upon
+            recent advances in diffusion models. We propose a two-stage
+            method, which contains a face detection model followed by a
+            latent diffusion model to generate realistic face in-paintings.
+            To demonstrate the versatility of anonymized images, we
+            train segmentation methods on anonymized data and evalu-
+            ate them on non-anonymized data. </p>
+            <p>Our experiments reveal
+            that our pipeline is better suited to anonymize data for seg-
+            mentation than naive methods and performes comparably
+            with recent GAN-based methods. Moreover, face detectors
+            achieve higher mAP scores for faces anonymized by our
+            method compared to naive or recent GAN-based methods. </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+
+
+
+    <!-- Concurrent Work. -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Related Links</h2>
+
+        <div class="content has-text-justified">
+          <p>
+            There's a lot of excellent work that we either build up on or used to compare our method against.
+          </p>
+          <p>
+            <a href="https://github.com/hukkelas/deep_privacy2">Deep Privacy 2</a> is a toolbox for realistic anonymization of humans, including a face and a full-body anonymizer.
+          </p>
+          <p>
+            <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">This repository</a> provides an excellent interface for stable diffusion. We used the API extensively for our anonymization method.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Concurrent Work. -->
+
+  </div>
+</section>
+
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@InProceedings{Klemp_2023_CVPR,
+    author    = {Klemp, Marvin and R\"osch, Kevin and Wagner, Royden and Quehl, Jannik and Lauer, Martin},
+    title     = {LDFA: Latent Diffusion Face Anonymization for Self-Driving Applications},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
+    month     = {June},
+    year      = {2023},
+    pages     = {3198-3204}
+}</code></pre>
+  </div>
+</section>
+
+
+  <footer class="footer">
+      <div class="container">
+          <div class="content has-text-centered">
+              <a class="icon-link"
+                  href="https://openaccess.thecvf.com/content/CVPR2023W/E2EAD/papers/Klemp_LDFA_Latent_Diffusion_Face_Anonymization_for_Self-Driving_Applications_CVPRW_2023_paper.pdf"
+                  target="_blank" class="external-link" disabled>
+                  <i class="bi bi-file-text"></i>
+              </a>
+              <a class="icon-link" href="https://github.com/KIT-MRT/latent_diffusion_face_anonymization" target="_blank" class="external-link"
+                  disabled>
+                  <i class="bi bi-github"></i>
+              </a>
+          </div>
+          <div class="columns is-centered">
+              <div class="column is-8">
+                  <div class="content">
+                      <p style="text-align: center">
+                          This website's design was taken from
+                          <a href="https://github.com/nerfies/nerfies.github.io"
+                              target="_blank">https://nerfies.github.io</a>
+                      </p>
+                      <p style="text-align: center">© Institute of Measurement and Control Systems at the Karlsruhe Institute of Technology, 2023</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+</footer>
+
+</body>
+</html>
