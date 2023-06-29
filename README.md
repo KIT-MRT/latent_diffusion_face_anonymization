@@ -5,17 +5,26 @@
 # Latent Diffusion Face Anonymisation LDFA
 This repository contains the code for the paper LDFA: Latent Diffusion Face Anonymization for Self-driving Applications.
 
+## Structure
+### Dockerfile
+The dockerfile is used to start container which runs the [Automatic1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) web UI for stable diffusion. LDFA uses the API to conveniently use a stable diffusion model for the anonymization of human faces.
+
+### Scripts
+`detect_faces.py` - This script uses [RetinaFace](https://github.com/serengil/retinaface) to detect faces on a given dataset.  
+`ldfa_face_anon.py` - This script implements the LDFA anonymization method.  
+`simple_face_anon.py` - This script implements the naive anonymization methods cropping, gaussian noise and pixelaziation which are applied on detected faces. 
+
+### Test
+The tests are not meant to be used as a unit test, but to show a quick script usage of our tooling. The tests are run on some samples from the [cityscapes](https://www.cityscapes-dataset.com/) dataset.
 ## Usage
-Please use the provided Docker container.
+Please use the provided Docker container. Make sure that you have Docker Compose V2. See [Diff between V1 and V2](https://docs.docker.com/compose/migrate/#what-are-the-functional-differences-between-compose-v1-and-compose-v2)
 
-Prior to using this tool, please make sure that you have correctly set up the image, mask, anonymized, and weights volumes inside the `docker-compose.yml` file.
+Prior to using this tool, please make sure that you have correctly set up the image, mask, anonymized, and weights volumes inside the `docker-compose.yml` file. 
 Furthermore, you can freely specify which GPU should be used.
-
-`docker compose up`
-
+You can start the needed docker instances with `docker compose up`.
+The script will look for all images in the given root folder. The default extension is `png`. If you want to use other extension, you can provide a flag to the corresponding python scripts, e.g. `--image_extension=jpg`.
 
 Once the docker container is running you can generate masks using:
-
 ```shell
 docker compose exec anon python3 /tool/scripts/detect_faces.py --image_dir=/data/images --mask_dir=/data/masks
 ```
