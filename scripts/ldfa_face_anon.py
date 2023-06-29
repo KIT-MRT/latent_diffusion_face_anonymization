@@ -15,12 +15,14 @@ if __name__ == "__main__":
     parser.add_argument('--image_dir', type=str, required=True)
     parser.add_argument('--mask_dir', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
+    parser.add_argument('--image_extension', type=str, default="png")
     args = parser.parse_args()
 
     image_dir = args.image_dir
     mask_dir = args.mask_dir
     output_dir = args.output_dir
-    png_files = dfa_io.glob_files_by_extension(image_dir, "png")
+    image_extension = args.image_extension
+    img_files = dfa_io.glob_files_by_extension(image_dir, image_extension)
     json_files = dfa_io.glob_files_by_extension(mask_dir, "json")
 
     debug_dir = os.path.join(output_dir, "debug")
@@ -34,10 +36,10 @@ if __name__ == "__main__":
 
     image_mask_dict = {}
     image_mask_dict = dfa_utils.add_file_paths_to_image_mask_dict(json_files, image_mask_dict, "mask_file")
-    image_mask_dict = dfa_utils.add_file_paths_to_image_mask_dict(png_files, image_mask_dict, "image_file")
+    image_mask_dict = dfa_utils.add_file_paths_to_image_mask_dict(img_files, image_mask_dict, "image_file")
     # clear image_mask_dict from entries that do not contain a mask
     image_mask_dict = {entry: image_mask_dict[entry] for entry in image_mask_dict if "mask_file" in image_mask_dict[entry]}
-    
+
     print("Inpaint faces on all images:")
     for entry in tqdm(image_mask_dict.values()):
         image = Image.open(entry["image_file"])
