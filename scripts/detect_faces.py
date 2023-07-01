@@ -31,8 +31,8 @@ if __name__ == "__main__":
     parser.add_argument('--mask_dir', required=True, type=str, help='Path to masks (output) directory')
     args = parser.parse_args()
 
-    input_path = args.input
-    output_path = args.output
+    input_path = args.image_dir
+    output_path = args.mask_dir
 
 
     img_paths = list(os.listdir(input_path))
