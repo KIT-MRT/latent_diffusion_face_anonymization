@@ -15,4 +15,4 @@ RUN python3 -m pip install -r requirements.txt
 RUN python3 setup.py install
 
 WORKDIR /opt/gui
-ENTRYPOINT python3 webui.py --listen --api
+ENTRYPOINT python3 webui.py --listen --api --xformers
