@@ -3,7 +3,7 @@ FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 RUN apt-get update && apt-get install -y wget git build-essential python3 python3-pip ffmpeg libsm6 libxext6
 RUN git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git /opt/gui
 WORKDIR /opt/gui
-RUN git checkout tags/v1.3.2
+RUN git checkout tags/v1.4.0
 RUN python3 -m pip install -r requirements_versions.txt
 RUN python3 -m pip install open_clip_torch
 RUN git clone https://github.com/Stability-AI/stablediffusion repositories/stable-diffusion-stability-ai
