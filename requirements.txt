@@ -5,3 +5,4 @@ requests
 scikit-image
 pyyaml
 tqdm
+xformers==0.0.20
