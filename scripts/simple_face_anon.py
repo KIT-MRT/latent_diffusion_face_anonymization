@@ -1,14 +1,14 @@
 import argparse
-
-import diffusion_face_anonymisation.utils as dfa_utils
-import diffusion_face_anonymisation.io_functions as dfa_io
-
 from PIL import Image
 import numpy as np
 from pathlib import Path
 import os
 from tqdm import tqdm
 import logging
+from typing import Callable
+
+import diffusion_face_anonymisation.utils as dfa_utils
+import diffusion_face_anonymisation.io_functions as dfa_io
 
 
 def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
@@ -31,7 +31,7 @@ def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
     )
 
 
-def define_anon_function(anon_method):
+def define_anon_function(anon_method: str) -> Callable | None:
     anon_functions = {
         "white": dfa_utils.anonymize_face_white,
         "gauss": dfa_utils.anonymize_face_gauss,
@@ -40,7 +40,7 @@ def define_anon_function(anon_method):
     return anon_functions.get(anon_method)
 
 
-def get_image_mask_dict(image_dir, mask_dir):
+def get_image_mask_dict(image_dir: str, mask_dir: str) -> dict:
     png_files = dfa_io.glob_files_by_extension(image_dir, "png")
     json_files = dfa_io.glob_files_by_extension(mask_dir, "json")
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         os.makedirs(debug_dir)
         logger.info(f"Debug directory created at {debug_dir}")
 
-    image_mask_dict = get_image_mask_dict(image_dir, mask_dir)
+    image_mask_dict = get_image_mask_dict(str(image_dir), str(mask_dir))
     logger.info(f"Found {len(image_mask_dict)} images with corresponding masks.")
     logger.info("Starting to anonymize faces in images.")
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         )
 
         inpainted_img_list = [
-            anon_function(image=image, mask=mask_dict["bb"])
+            anon_function(image=image, mask=mask_dict["bb"])  # type: ignore
             for mask_dict in mask_dict_list
         ]
 
