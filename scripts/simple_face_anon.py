@@ -39,27 +39,9 @@ def define_anon_function(anon_method):
     return anon_functions.get(anon_method)
 
 
-if __name__ == "__main__":
-    # Set up logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler("simple_face_anon.log"), logging.StreamHandler()],
-    )
-    logger = logging.getLogger(__name__)
-    parser = setup_parser()
-    image_dir, mask_dir, output_dir, anon_function = parse_args(parser)
-
-    logger.info(
-        f"Starting face anonymization with images from {image_dir}, masks from {mask_dir}, output to {output_dir}"
-    )
+def get_image_mask_dict(image_dir, mask_dir):
     png_files = dfa_io.glob_files_by_extension(image_dir, "png")
     json_files = dfa_io.glob_files_by_extension(mask_dir, "json")
-
-    debug_dir = os.path.join(output_dir, "debug")
-    if not os.path.exists(debug_dir):
-        os.makedirs(debug_dir)
-        logger.info(f"Debug directory created at {debug_dir}")
 
     image_mask_dict = {}
     image_mask_dict = dfa_utils.add_file_paths_to_image_mask_dict(
@@ -74,8 +56,31 @@ if __name__ == "__main__":
         for entry in image_mask_dict
         if "mask_file" in image_mask_dict[entry]
     }
-    logger.info(f"Found {len(image_mask_dict)} images with corresponding masks.")
+    return image_mask_dict
 
+
+if __name__ == "__main__":
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler("simple_face_anon.log"), logging.StreamHandler()],
+    )
+    logger = logging.getLogger(__name__)
+    parser = setup_parser()
+    image_dir, mask_dir, output_dir, anon_function = parse_args(parser)
+
+    logger.info(
+        f"Starting face anonymization with images from {image_dir}, masks from {mask_dir}, output to {output_dir}"
+    )
+
+    debug_dir = os.path.join(output_dir, "debug")
+    if not os.path.exists(debug_dir):
+        os.makedirs(debug_dir)
+        logger.info(f"Debug directory created at {debug_dir}")
+
+    image_mask_dict = get_image_mask_dict(image_dir, mask_dir)
+    logger.info(f"Found {len(image_mask_dict)} images with corresponding masks.")
     logger.info("Starting to anonymize faces in images.")
 
     for entry in tqdm(image_mask_dict.values()):
