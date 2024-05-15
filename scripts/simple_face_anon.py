@@ -107,13 +107,18 @@ if __name__ == "__main__":
             image, inpainted_img_list, mask_dict_list
         )
         orig_file = Path(image_file)
+        # Construct paths for output and debug images
+        output_filename = f"{orig_file.stem}_anon_{anon_function}{orig_file.suffix}"
+        debug_img_filename = (
+            f"debug_{orig_file.stem}_anon_{anon_function}{orig_file.suffix}"
+        )
 
-        output_filename = Path(f"{orig_file.stem}_dfa{orig_file.suffix}")
-        debug_img_filename = Path(f"debug_{orig_file.stem}_dfa{orig_file.suffix}")
-        output_path = Path(output_dir, output_filename)
-        final_img.save(str(output_path))
-        debug_output_path = Path(output_dir, "debug", debug_img_filename)
-        Image.fromarray(debug_img).save(str(debug_output_path))
+        output_path = output_dir / output_filename
+        debug_output_path = output_dir / "debug" / debug_img_filename
+
+        # Save the final image and debug image
+        final_img.save(output_path)
+        Image.fromarray(debug_img).save(debug_output_path)
 
         logger.info(f"Anonymized image saved to {output_path}")
         logger.debug(f"Debug image saved to {debug_output_path}")
