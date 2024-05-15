@@ -98,10 +98,10 @@ if __name__ == "__main__":
             f"Found {len(mask_dict_list)} faces in image {Path(image_file).stem}"
         )
 
-        inpainted_img_list = []
-        for mask_dict in mask_dict_list:
-            img_anon = anon_function(image=image, mask=mask_dict["bb"])  # type: ignore
-            inpainted_img_list.append(img_anon)
+        inpainted_img_list = [
+            anon_function(image=image, mask=mask_dict["bb"])
+            for mask_dict in mask_dict_list
+        ]
 
         final_img = dfa_utils.add_inpainted_faces_to_orig_img(
             image, inpainted_img_list, mask_dict_list
