@@ -25,6 +25,11 @@ def setup_parser():
     return parser
 
 
+def parse_args(parser):
+    args = parser.parse_args()
+    return args.image_dir, args.mask_dir, args.output_dir, args.anon_function
+
+
 if __name__ == "__main__":
     # Set up logging
     logging.basicConfig(
@@ -34,11 +39,8 @@ if __name__ == "__main__":
     )
     logger = logging.getLogger(__name__)
     parser = setup_parser()
-    args = parser.parse_args()
+    image_dir, mask_dir, output_dir, anon_function = parse_args(parser)
 
-    image_dir = args.image_dir
-    mask_dir = args.mask_dir
-    output_dir = args.output_dir
     logger.info(
         f"Starting face anonymization with images from {image_dir}, masks from {mask_dir}, output to {output_dir}"
     )
