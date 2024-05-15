@@ -27,7 +27,12 @@ def setup_parser():
 
 def parse_args(parser):
     args = parser.parse_args()
-    return args.image_dir, args.mask_dir, args.output_dir, args.anon_function
+    return (
+        Path(args.image_dir),
+        Path(args.mask_dir),
+        Path(args.output_dir),
+        args.anon_function,
+    )
 
 
 def define_anon_function(anon_method):
@@ -73,7 +78,6 @@ if __name__ == "__main__":
     logger.info(
         f"Starting face anonymization with images from {image_dir}, masks from {mask_dir}, output to {output_dir}"
     )
-
     debug_dir = os.path.join(output_dir, "debug")
     if not os.path.exists(debug_dir):
         os.makedirs(debug_dir)
@@ -106,6 +110,7 @@ if __name__ == "__main__":
         final_img = dfa_utils.add_inpainted_faces_to_orig_img(
             image, inpainted_img_list, mask_dict_list
         )
+
         orig_file = Path(image_file)
         # Construct paths for output and debug images
         output_filename = f"{orig_file.stem}_anon_{anon_function}{orig_file.suffix}"
