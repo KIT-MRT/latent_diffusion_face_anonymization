@@ -30,6 +30,15 @@ def parse_args(parser):
     return args.image_dir, args.mask_dir, args.output_dir, args.anon_function
 
 
+def define_anon_function(anon_method):
+    anon_functions = {
+        "white": dfa_utils.anonymize_face_white,
+        "gauss": dfa_utils.anonymize_face_gauss,
+        "pixel": dfa_utils.anonymize_face_pixelize,
+    }
+    return anon_functions.get(anon_method)
+
+
 if __name__ == "__main__":
     # Set up logging
     logging.basicConfig(
@@ -46,14 +55,6 @@ if __name__ == "__main__":
     )
     png_files = dfa_io.glob_files_by_extension(image_dir, "png")
     json_files = dfa_io.glob_files_by_extension(mask_dir, "json")
-
-    anon_function = None
-    if args.anon_function == "white":
-        anon_function = dfa_utils.anonymize_face_white
-    if args.anon_function == "gauss":
-        anon_function = dfa_utils.anonymize_face_gauss
-    if args.anon_function == "pixel":
-        anon_function = dfa_utils.anonymize_face_pixelize
 
     debug_dir = os.path.join(output_dir, "debug")
     if not os.path.exists(debug_dir):
