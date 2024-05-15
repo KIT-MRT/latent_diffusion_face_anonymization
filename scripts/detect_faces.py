@@ -9,7 +9,7 @@ def detect(*, img_path, threshold=0.3):
     faces_detected = RetinaFace.detect_faces(img_path=img_path, threshold=threshold)
     faces = []
     for k in faces_detected:
-        if type(k) != str:
+        if isinstance(k) != str:
             continue
 
         face = faces_detected[k]
