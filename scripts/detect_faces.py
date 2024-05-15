@@ -18,8 +18,8 @@ def detect(*, img_path, threshold=0.3):
         h = tr[1] - bl[1]
 
         conf = face["score"]
-        tl = [bl[0], bl[1]+h]
-        br = [tr[0], tr[1]-h]
+        tl = [bl[0], bl[1] + h]
+        br = [tr[0], tr[1] - h]
         faces.append([int(tl[0]), int(tl[1]), int(br[0]), int(br[1]), float(conf)])
 
     return faces
@@ -27,13 +27,16 @@ def detect(*, img_path, threshold=0.3):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--image_dir', required=True, type=str, help='Path to input directory')
-    parser.add_argument('--mask_dir', required=True, type=str, help='Path to masks (output) directory')
+    parser.add_argument(
+        "--image_dir", required=True, type=str, help="Path to input directory"
+    )
+    parser.add_argument(
+        "--mask_dir", required=True, type=str, help="Path to masks (output) directory"
+    )
     args = parser.parse_args()
 
     input_path = args.image_dir
     output_path = args.mask_dir
-
 
     img_paths = list(os.listdir(input_path))
     for image in tqdm(img_paths):
@@ -42,7 +45,9 @@ if __name__ == "__main__":
         faces = detect(img_path=img_path)
 
         os.makedirs(f"{output_path}", exist_ok=True)
-        output_file = f"{output_path}/{os.path.splitext(os.path.basename(img_path))[0]}.json"
+        output_file = (
+            f"{output_path}/{os.path.splitext(os.path.basename(img_path))[0]}.json"
+        )
         print(output_file)
-        with open(output_file, 'w+', encoding='utf8') as json_file:
+        with open(output_file, "w+", encoding="utf8") as json_file:
             json.dump({"face": faces}, json_file)
