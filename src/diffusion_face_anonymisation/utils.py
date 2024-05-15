@@ -7,6 +7,8 @@ from io import BytesIO
 import base64
 from skimage.filters import gaussian
 
+import diffusion_face_anonymisation.io_functions as dfa_io
+
 
 class FaceBoundingBox:
     def __init__(self, bounding_box_list: list):
@@ -18,6 +20,26 @@ class FaceBoundingBox:
 
     def get_slice_area(self) -> tuple[slice, slice]:
         return (slice(self.ytl, self.ybr), slice(self.xtl, self.xbr))
+
+
+def get_image_mask_dict(image_dir: str, mask_dir: str) -> dict:
+    png_files = dfa_io.glob_files_by_extension(image_dir, "png")
+    json_files = dfa_io.glob_files_by_extension(mask_dir, "json")
+
+    image_mask_dict = {}
+    image_mask_dict = add_file_paths_to_image_mask_dict(
+        json_files, image_mask_dict, "mask_file"
+    )
+    image_mask_dict = add_file_paths_to_image_mask_dict(
+        png_files, image_mask_dict, "image_file"
+    )
+    # clear image_mask_dict from entries that do not contain a mask
+    image_mask_dict = {
+        entry: image_mask_dict[entry]
+        for entry in image_mask_dict
+        if "mask_file" in image_mask_dict[entry]
+    }
+    return image_mask_dict
 
 
 def preprocess_image(path_to_image: str) -> np.ndarray:
