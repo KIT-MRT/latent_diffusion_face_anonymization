@@ -12,6 +12,13 @@ import logging
 
 
 if __name__ == "__main__":
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler("simple_face_anon.log"), logging.StreamHandler()],
+    )
+    logger = logging.getLogger(__name__)
     parser = argparse.ArgumentParser(
         prog="Naive Face Anonymization",
         description="Anonymize Faces with naive functions.",
@@ -27,6 +34,9 @@ if __name__ == "__main__":
     image_dir = args.image_dir
     mask_dir = args.mask_dir
     output_dir = args.output_dir
+    logger.info(
+        f"Starting face anonymization with images from {image_dir}, masks from {mask_dir}, output to {output_dir}"
+    )
     png_files = dfa_io.glob_files_by_extension(image_dir, "png")
     json_files = dfa_io.glob_files_by_extension(mask_dir, "json")
 
@@ -39,13 +49,9 @@ if __name__ == "__main__":
         anon_function = dfa_utils.anonymize_face_pixelize
 
     debug_dir = os.path.join(output_dir, "debug")
-    os.makedirs(debug_dir, exist_ok=True)
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        filename=os.path.join(debug_dir, "augmentation.log"),
-        filemode="w+",
-    )
+    if not os.path.exists(debug_dir):
+        os.makedirs(debug_dir)
+        logger.info(f"Debug directory created at {debug_dir}")
 
     image_mask_dict = {}
     image_mask_dict = dfa_utils.add_file_paths_to_image_mask_dict(
@@ -60,33 +66,41 @@ if __name__ == "__main__":
         for entry in image_mask_dict
         if "mask_file" in image_mask_dict[entry]
     }
-    print("Inpaint faces on all images:")
+    logger.info(f"Found {len(image_mask_dict)} images with corresponding masks.")
+
+    logger.info("Starting to anonymize faces in images.")
+
     for entry in tqdm(image_mask_dict.values()):
-        image = Image.open(entry["image_file"])
+        image_file = entry["image_file"]
+        mask_file = entry["mask_file"]
+        logger.info(f"Processing image {image_file} with mask {mask_file}")
+
+        image = Image.open(image_file)
         debug_img = np.array(image)
-        all_faces_bb_list = dfa_utils.get_face_bounding_box_list_from_file(
-            entry["mask_file"]
-        )
+        all_faces_bb_list = dfa_utils.get_face_bounding_box_list_from_file(mask_file)
         mask_dict_list = dfa_utils.convert_bb_to_mask_dict_list(
             all_faces_bb_list, image_width=image.width, image_height=image.height
         )
-        logging.debug(
-            f"Found {len(mask_dict_list)} faces in image {Path(entry['image_file']).stem}"
+        logger.debug(
+            f"Found {len(mask_dict_list)} faces in image {Path(image_file).stem}"
         )
 
         inpainted_img_list = []
         for mask_dict in mask_dict_list:
-            img_anon = anon_function(image=image, mask=mask_dict["bb"])
+            img_anon = anon_function(image=image, mask=mask_dict["bb"])  # type: ignore
             inpainted_img_list.append(img_anon)
 
         final_img = dfa_utils.add_inpainted_faces_to_orig_img(
             image, inpainted_img_list, mask_dict_list
         )
-        orig_file = Path(entry["image_file"])
+        orig_file = Path(image_file)
 
         output_filename = Path(f"{orig_file.stem}_dfa{orig_file.suffix}")
         debug_img_filename = Path(f"debug_{orig_file.stem}_dfa{orig_file.suffix}")
         output_path = Path(output_dir, output_filename)
         final_img.save(str(output_path))
-        debug_output_path = Path(output_dir, "debug", output_filename)
+        debug_output_path = Path(output_dir, "debug", debug_img_filename)
         Image.fromarray(debug_img).save(str(debug_output_path))
+
+        logger.info(f"Anonymized image saved to {output_path}")
+        logger.debug(f"Debug image saved to {debug_output_path}")
