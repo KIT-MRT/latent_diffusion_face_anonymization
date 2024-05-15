@@ -11,15 +11,8 @@ from tqdm import tqdm
 import logging
 
 
-if __name__ == "__main__":
-    # Set up logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler("simple_face_anon.log"), logging.StreamHandler()],
-    )
-    logger = logging.getLogger(__name__)
-    parser = argparse.ArgumentParser(
+def setup_parser():
+    argparse.ArgumentParser(
         prog="Naive Face Anonymization",
         description="Anonymize Faces with naive functions.",
     )
@@ -29,6 +22,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--anon_function", type=str, required=True, choices=["white", "gauss", "pixel"]
     )
+    return parser
+
+
+if __name__ == "__main__":
+    # Set up logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler("simple_face_anon.log"), logging.StreamHandler()],
+    )
+    logger = logging.getLogger(__name__)
+    parser = setup_parser()
     args = parser.parse_args()
 
     image_dir = args.image_dir
