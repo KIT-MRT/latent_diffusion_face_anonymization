@@ -9,15 +9,15 @@ import diffusion_face_anonymisation.utils as dfa_utils
 from diffusion_face_anonymisation.io_functions import setup_parser_and_parse_args
 from diffusion_face_anonymisation.anonymization_functions import define_anon_function
 
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("face_anon.log"), logging.StreamHandler()],
+)
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    # Set up logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler("face_anon.log"), logging.StreamHandler()],
-    )
-    logger = logging.getLogger(__name__)
     image_dir, mask_dir, output_dir, anon_method = setup_parser_and_parse_args()
     anon_function = define_anon_function(anon_method)
 
@@ -40,6 +40,7 @@ if __name__ == "__main__":
 
         image = Image.open(image_file)
         debug_img = np.array(image)
+
         all_faces_bb_list = dfa_utils.get_face_bounding_box_list_from_file(mask_file)
         mask_dict_list = dfa_utils.convert_bb_to_mask_dict_list(
             all_faces_bb_list, image_width=image.width, image_height=image.height
