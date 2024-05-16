@@ -3,7 +3,10 @@ from tqdm import tqdm
 import logging
 
 import diffusion_face_anonymisation.utils as dfa_utils
-from diffusion_face_anonymisation.io_functions import setup_parser_and_parse_args
+from diffusion_face_anonymisation.io_functions import (
+    setup_parser_and_parse_args,
+    save_anon_image,
+)
 from diffusion_face_anonymisation.anonymization_functions import (
     define_anon_function,
     anonymize_image,
@@ -37,4 +40,5 @@ if __name__ == "__main__":
         image_file = entry["image_file"]
         mask_file = entry["mask_file"]
         logger.info(f"Processing image {image_file} with mask {mask_file}")
-        anonymize_image(image_file, mask_file, anon_function)
+        anon_img = anonymize_image(image_file, mask_file, anon_function)
+        save_anon_image(anon_img, image_file, output_dir, anon_method)
