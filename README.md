@@ -2,8 +2,13 @@
     <img src="https://raw.githubusercontent.com/KIT-MRT/latent_diffusion_face_anonymization/pages/docs/static/images/favicon.svg?sanitize=true"
         height="130">
 </p>
-![Static Badge](https://img.shields.io/badge/Paper-CVPRW23-1c75b8?style=plastic&link=https%3A%2F%2Fopenaccess.thecvf.com%2Fcontent%2FCVPR2023W%2FE2EAD%2Fpapers%2FKlemp_LDFA_Latent_Diffusion_Face_Anonymization_for_Self-Driving_Applications_CVPRW_2023_paper.pdf)
-![Static Badge](https://img.shields.io/badge/Project%20page-green?style=flat&link=https%3A%2F%2Fkit-mrt.github.io%2Flatent_diffusion_face_anonymization%2F)
+
+<p align="center">
+    <a img src="https://img.shields.io/badge/Project%20page-green?style=flat&link=https%3A%2F%2Fkit-mrt.github.io%2Flatent_diffusion_face_anonymization%2F"/></a>
+    <a img src="https://img.shields.io/badge/Paper-CVPRW23-1c75b8?style=flat&link=https%3A%2F%2Fopenaccess.thecvf.com%2Fcontent%2FCVPR2023W%2FE2EAD%2Fhtml%2FKlemp_LDFA_Latent_Diffusion_Face_Anonymization_for_Self-Driving_Applications_CVPRW_2023_paper.html"/></a>
+</p>
+
+
 
 
 
