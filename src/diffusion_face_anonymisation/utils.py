@@ -65,11 +65,7 @@ def add_file_paths_to_image_mask_dict(
 ) -> dict:
     for file in file_paths:
         image_name = file.stem
-        try:
-            image_mask_dict[image_name][file_key] = file
-        except KeyError:
-            image_mask_dict[image_name] = {}
-            image_mask_dict[image_name][file_key] = file
+        image_mask_dict.setdefault(image_name, {})[file_key] = file
     return image_mask_dict
 
 
