@@ -55,7 +55,6 @@ def anonymize_face_pixelize(*, image, pixels_per_block=8):
 def anonymize_image(image_file: Path, mask_file: Path, anon_function: Callable):
 
     image = Image.open(image_file)
-    debug_img = np.array(image)
 
     all_faces_bb_list = dfa_utils.get_face_bounding_box_list_from_file(mask_file)
     mask_dict_list = dfa_utils.convert_bb_to_mask_dict_list(
@@ -71,20 +70,4 @@ def anonymize_image(image_file: Path, mask_file: Path, anon_function: Callable):
     final_img = dfa_utils.add_inpainted_faces_to_orig_img(
         image, inpainted_img_list, mask_dict_list
     )
-
-    orig_file = Path(image_file)
-    # Construct paths for output and debug images
-    output_filename = f"{orig_file.stem}_anon_{anon_function}{orig_file.suffix}"
-    debug_img_filename = (
-        f"debug_{orig_file.stem}_anon_{anon_function}{orig_file.suffix}"
-    )
-
-    output_path = output_dir / output_filename
-    debug_output_path = output_dir / "debug" / debug_img_filename
-
-    # Save the final image and debug image
-    final_img.save(output_path)
-    Image.fromarray(debug_img).save(debug_output_path)
-
-    logging.info(f"Anonymized image saved to {output_path}")
-    logging.debug(f"Debug image saved to {debug_output_path}")
+    return final_img
