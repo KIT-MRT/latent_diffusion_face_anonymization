@@ -1,8 +1,19 @@
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
+from typing import Callable
 
 from diffusion_face_anonymisation.utils import FaceBoundingBox
+
+
+def define_anon_function(anon_method: str) -> Callable | None:
+    anon_functions = {
+        "white": anonymize_face_white,
+        "gauss": anonymize_face_gauss,
+        "pixel": anonymize_face_pixelize,
+        "ldfa": None,  # TODO: implement new ldfa function
+    }
+    return anon_functions.get(anon_method)
 
 
 def anonymize_face_white(*, image: np.ndarray, mask: FaceBoundingBox):

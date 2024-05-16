@@ -5,10 +5,9 @@ from pathlib import Path
 import os
 from tqdm import tqdm
 import logging
-from typing import Callable
 
 import diffusion_face_anonymisation.utils as dfa_utils
-import diffusion_face_anonymisation.anonymization_functions as dfa_anon_functions
+from diffusion_face_anonymisation.anonymization_functions import define_anon_function
 
 
 def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
@@ -33,16 +32,6 @@ def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
         Path(args.output_dir),
         args.anon_function,
     )
-
-
-def define_anon_function(anon_method: str) -> Callable | None:
-    anon_functions = {
-        "white": dfa_anon_functions.anonymize_face_white,
-        "gauss": dfa_anon_functions.anonymize_face_gauss,
-        "pixel": dfa_anon_functions.anonymize_face_pixelize,
-        "ldfa": None,  # TODO: implement new ldfa function
-    }
-    return anon_functions.get(anon_method)
 
 
 if __name__ == "__main__":
