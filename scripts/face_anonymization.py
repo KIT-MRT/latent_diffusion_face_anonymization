@@ -39,7 +39,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler("simple_face_anon.log"), logging.StreamHandler()],
+        handlers=[logging.FileHandler("face_anon.log"), logging.StreamHandler()],
     )
     logger = logging.getLogger(__name__)
     image_dir, mask_dir, output_dir, anon_method = setup_parser_and_parse_args()
