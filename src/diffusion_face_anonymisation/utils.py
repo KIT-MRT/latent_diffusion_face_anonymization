@@ -1,11 +1,6 @@
 import json
 from PIL import Image
 import numpy as np
-import requests
-import io
-from io import BytesIO
-import base64
-from skimage.filters import gaussian
 
 import diffusion_face_anonymisation.io_functions as dfa_io
 
@@ -94,88 +89,3 @@ def get_face_cutout(image: np.ndarray, mask_dict: dict):
     face_slice = mask_dict["bb"].get_slice_area()
     face_cutout_np = image[face_slice]
     return Image.fromarray(face_cutout_np)
-
-
-def encode_image_mask_to_b64(init_img, mask_img):
-    init_img_bytes = BytesIO()
-    init_img.save(init_img_bytes, format="png")
-    init_img_b64 = base64.b64encode(init_img_bytes.getvalue())
-
-    mask_bytes = BytesIO()
-    mask_img.save(mask_bytes, format="png")
-    mask_img_b64 = base64.b64encode(mask_bytes.getvalue())
-    return init_img_b64, mask_img_b64
-
-
-def fill_png_payload(init_img_b64, mask_b64):
-    return {
-        "init_images": ["data:image/png;base64," + init_img_b64.decode("utf-8")],
-        "mask": "data:image/png;base64," + mask_b64.decode("utf-8"),
-        "inpaint_full_res": True,
-        "inpaint_full_res_padding": 32,
-        "inpainting_fill": 1,
-        "cfg_scale": 1,
-        "sampler": "k_euler_a",
-    }
-
-
-def send_request_to_api(png_payload):
-    ok = False
-    for _ in range(10):
-        response = requests.post(
-            url=f"http://127.0.0.1:7860/sdapi/v1/img2img", json=png_payload
-        )
-        if response.status_code == 200:
-            ok = True
-            break
-
-    if not ok:
-        raise RuntimeError("unable to send img2img request")
-
-    response_json = response.json()
-    image_base64 = response_json["images"][0]
-    return image_base64
-
-
-def request_inpaint(init_img, mask):
-    init_img_b64, mask_b64 = encode_image_mask_to_b64(init_img, mask)
-    png_payload = fill_png_payload(init_img_b64, mask_b64)
-    inpainted_img_b64 = send_request_to_api(png_payload)
-
-    def convert_b64_to_pil(img_b64):
-        return Image.open(io.BytesIO(base64.b64decode(img_b64.split(",", 1)[0])))
-
-    return convert_b64_to_pil(inpainted_img_b64)
-
-
-def anonymize_face_white(*, image: np.ndarray, mask: FaceBoundingBox):
-    img_anon = np.array(image)
-    img_anon[mask.get_slice_area()] = [255, 255, 255]
-    return Image.fromarray(img_anon)
-
-
-def anonymize_face_gauss(*, image: np.ndarray, mask: FaceBoundingBox):
-    img_anon = np.array(image, dtype=float) / 255
-    face_area = img_anon[mask.get_slice_area()]
-    img_anon[mask.get_slice_area()] = gaussian(face_area, sigma=3, channel_axis=-1)
-    return Image.fromarray((img_anon * 255).astype(np.uint8))
-
-
-def anonymize_face_pixelize(*, image, pixels_per_block=8):
-    img_anon = np.array(image)
-
-    for idx_v in range(img_anon.shape[0] // pixels_per_block):
-        for idx_u in range(img_anon.shape[1] // pixels_per_block):
-            block = img_anon[
-                idx_v * pixels_per_block : (idx_v + 1) * pixels_per_block,
-                idx_u * pixels_per_block : (idx_u + 1) * pixels_per_block,
-            ]
-            mean = np.mean(
-                np.reshape(block, [pixels_per_block * pixels_per_block, 3]), axis=0
-            )
-            img_anon[
-                idx_v * pixels_per_block : (idx_v + 1) * pixels_per_block,
-                idx_u * pixels_per_block : (idx_u + 1) * pixels_per_block,
-            ] = mean
-
-    return Image.fromarray(img_anon)
