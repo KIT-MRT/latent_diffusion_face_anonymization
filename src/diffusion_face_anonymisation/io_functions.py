@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 import yaml
 import argparse
+import logging
+from PIL import Image
 
 
 def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
@@ -41,3 +43,17 @@ def load_config(config_yaml: str) -> dict:
     with open(config_yaml, "r") as config_yaml_file:
         config_dict = yaml.load(config_yaml_file, yaml.SafeLoader)
     return config_dict
+
+
+def save_anon_image(anon_img, image_file: str, output_dir: Path, anon_function: str):
+    # TODO: implement debug img saving
+    orig_file = Path(image_file)
+    # Construct paths for output and debug images
+    output_filename = f"{orig_file.stem}_anon_{anon_function}{orig_file.suffix}"
+
+    output_path = output_dir / output_filename
+
+    # Save the final image and debug image
+    anon_img.save(output_path / output_filename)
+
+    logging.info(f"Anonymized image saved to {output_path}")
