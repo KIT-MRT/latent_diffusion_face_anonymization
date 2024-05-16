@@ -1,6 +1,31 @@
 import os
 from pathlib import Path
 import yaml
+import argparse
+
+
+def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
+    parser = argparse.ArgumentParser(
+        prog="Naive Face Anonymization",
+        description="Anonymize Faces with naive functions.",
+    )
+    parser.add_argument("--image_dir", type=str, required=True)
+    parser.add_argument("--mask_dir", type=str, required=True)
+    parser.add_argument("--output_dir", type=str, required=True)
+    parser.add_argument("--image_extension", type=str, default="png")
+    parser.add_argument(
+        "--anon_function",
+        type=str,
+        required=True,
+        choices=["white", "gauss", "pixel", "ldfa"],
+    )
+    args = parser.parse_args()
+    return (
+        Path(args.image_dir),
+        Path(args.mask_dir),
+        Path(args.output_dir),
+        args.anon_function,
+    )
 
 
 def glob_files_by_extension(base_dir: str, extension: str) -> list:

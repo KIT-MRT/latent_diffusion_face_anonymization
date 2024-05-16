@@ -1,4 +1,3 @@
-import argparse
 from PIL import Image
 import numpy as np
 from pathlib import Path
@@ -7,31 +6,8 @@ from tqdm import tqdm
 import logging
 
 import diffusion_face_anonymisation.utils as dfa_utils
+from diffusion_face_anonymisation.io_functions import setup_parser_and_parse_args
 from diffusion_face_anonymisation.anonymization_functions import define_anon_function
-
-
-def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
-    parser = argparse.ArgumentParser(
-        prog="Naive Face Anonymization",
-        description="Anonymize Faces with naive functions.",
-    )
-    parser.add_argument("--image_dir", type=str, required=True)
-    parser.add_argument("--mask_dir", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, required=True)
-    parser.add_argument("--image_extension", type=str, default="png")
-    parser.add_argument(
-        "--anon_function",
-        type=str,
-        required=True,
-        choices=["white", "gauss", "pixel", "ldfa"],
-    )
-    args = parser.parse_args()
-    return (
-        Path(args.image_dir),
-        Path(args.mask_dir),
-        Path(args.output_dir),
-        args.anon_function,
-    )
 
 
 if __name__ == "__main__":
