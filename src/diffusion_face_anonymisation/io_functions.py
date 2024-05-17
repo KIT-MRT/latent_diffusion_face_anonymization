@@ -30,7 +30,23 @@ def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
     )
 
 
-def glob_files_by_extension(base_dir: str, extension: str) -> list:
+def setup_face_detection_parser_and_parse_args() -> tuple[Path, Path]:
+    parser = argparse.ArgumentParser(
+        prog="Face detection",
+        description="Detects faces with Retina face and writes the bounding box coordinates to a json",
+    )
+    parser.add_argument(
+        "--image_dir", required=True, type=str, help="Path to input directory"
+    )
+    parser.add_argument(
+        "--mask_dir", required=True, type=str, help="Path to masks (output) directory"
+    )
+    args = parser.parse_args()
+
+    return args.image_dir, args.mask_dir
+
+
+def glob_files_by_extension(base_dir: str, extension: str) -> list[Path]:
     files_list = []
     for root, _, files in os.walk(base_dir):
         files_list.extend(
