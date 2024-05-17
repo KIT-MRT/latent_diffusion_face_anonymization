@@ -1,7 +1,6 @@
+tensorflow==2.13.1
 retina-face
-tensorflow
 pillow
-requests
 scikit-image
 pyyaml
 tqdm
