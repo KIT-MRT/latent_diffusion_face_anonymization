@@ -1,6 +1,7 @@
 import json
 from PIL import Image
 import numpy as np
+from pathlib import Path
 
 import diffusion_face_anonymisation.io_functions as dfa_io
 
@@ -42,7 +43,7 @@ def preprocess_image(path_to_image: str) -> np.ndarray:
     return np.array(image)
 
 
-def get_face_bounding_box_list_from_file(path_to_bounding_box_file: str) -> dict:
+def get_face_bounding_box_list_from_file(path_to_bounding_box_file: Path) -> dict:
     with open(path_to_bounding_box_file, "r") as bounding_box_file_json:
         bb_dict = json.load(bounding_box_file_json)
     return bb_dict["face"]
