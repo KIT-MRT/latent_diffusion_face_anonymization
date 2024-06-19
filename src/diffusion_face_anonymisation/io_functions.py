@@ -67,9 +67,7 @@ def save_anon_image(anon_img, image_file: str, output_dir: Path, anon_function: 
     # Construct paths for output and debug images
     output_filename = f"{orig_file.stem}_anon_{anon_function}{orig_file.suffix}"
 
-    output_path = output_dir / output_filename
-
     # Save the final image and debug image
-    anon_img.save(output_path / output_filename)
+    anon_img.save(output_dir / output_filename)
 
-    logging.info(f"Anonymized image saved to {output_path}")
+    logging.info(f"Anonymized image saved to {output_dir/output_filename}")
