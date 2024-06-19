@@ -4,18 +4,7 @@ import numpy as np
 from pathlib import Path
 
 import diffusion_face_anonymisation.io_functions as dfa_io
-
-
-class FaceBoundingBox:
-    def __init__(self, bounding_box_list: list):
-        self.xtl = bounding_box_list[0]
-        self.ytl = bounding_box_list[3]
-        self.xbr = bounding_box_list[2]
-        self.ybr = bounding_box_list[1]
-        self.confidence = bounding_box_list[4]
-
-    def get_slice_area(self) -> tuple[slice, slice]:
-        return (slice(self.ytl, self.ybr), slice(self.xtl, self.xbr))
+from diffusion_face_anonymisation.bounding_box_utils import Face
 
 
 def get_image_mask_dict(image_dir: str, mask_dir: str) -> dict:
@@ -43,26 +32,25 @@ def preprocess_image(path_to_image: str) -> np.ndarray:
     return np.array(image)
 
 
-def get_face_bounding_box_list_from_file(path_to_bounding_box_file: Path) -> dict:
+def get_faces_from_file(path_to_bounding_box_file: Path) -> list[Face]:
     with open(path_to_bounding_box_file, "r") as bounding_box_file_json:
         bb_dict = json.load(bounding_box_file_json)
-    return bb_dict["face"]
+    faces = []
+    for face in bb_dict["face"]:
+        faces.append(Face(face))
+    return faces
 
 
-def convert_bb_to_mask_dict_list(
-    all_faces_list: list, image_width: int, image_height: int
-) -> list:
-    mask_dict_list = list()
-    for face_bb_list in all_faces_list:
-        mask_image_np = np.zeros((image_height, image_width), np.uint8)
-        face_bb = FaceBoundingBox(face_bb_list)
-        mask_image_np[face_bb.get_slice_area()] = 255
-        mask_dict_list.append({"bb": face_bb, "mask": mask_image_np})
-    return mask_dict_list
+def add_face_cutout_and_mask_img(faces: list[Face], image: np.ndarray):
+    for face in faces:
+        face.set_face_cutout(image)
+        mask_image_np = np.zeros((image.shape[0], image.shape[1]), np.uint8)
+        mask_image_np[face.bounding_box.get_slice_area()] = 255
+        face.set_mask_image(mask_image_np)
 
 
 def add_file_paths_to_image_mask_dict(
-    file_paths: list, image_mask_dict: dict, file_key: str
+    file_paths: list[Path], image_mask_dict: dict, file_key: str
 ) -> dict:
     for file in file_paths:
         image_name = file.stem
@@ -71,18 +59,12 @@ def add_file_paths_to_image_mask_dict(
 
 
 def add_inpainted_faces_to_orig_img(
-    image: np.ndarray, inpainted_img_list: list, mask_dict_list: list
-):
+    image: np.ndarray, inpainted_img_list: list[Image.Image], mask_dict_list: list[dict]
+) -> Image.Image:
     img_np = np.array(image)
     for inpainted_img, mask_dict in zip(inpainted_img_list, mask_dict_list):
-        face_bb = mask_dict["bb"]
+        face_bb = mask_dict["bounding_box"]
         face_slice_area = face_bb.get_slice_area()
         inpainted_img_np = np.array(inpainted_img)
         img_np[face_slice_area] = inpainted_img_np[face_slice_area]
     return Image.fromarray(img_np)
-
-
-def get_face_cutout(image: np.ndarray, mask_dict: dict):
-    face_slice = mask_dict["bb"].get_slice_area()
-    face_cutout_np = image[face_slice]
-    return Image.fromarray(face_cutout_np)
