@@ -4,6 +4,7 @@ from pathlib import Path
 from skimage.filters import gaussian
 from typing import Callable
 import logging
+from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
 
 from diffusion_face_anonymisation.utils import FaceBoundingBox
 import diffusion_face_anonymisation.utils as dfa_utils
@@ -14,9 +15,13 @@ def define_anon_function(anon_method: str) -> Callable:
         "white": anonymize_face_white,
         "gauss": anonymize_face_gauss,
         "pixel": anonymize_face_pixelize,
-        "ldfa": None,  # TODO: implement new ldfa function
+        "ldfa": anonymize_face_ldfa,  # TODO: implement new ldfa function
     }
     return anon_functions.get(anon_method)  # type: ignore
+
+
+def anonymize_face_ldfa(*, image: np.ndarray, mask: FaceBoundingBox):
+    pass
 
 
 def anonymize_face_white(*, image: np.ndarray, mask: FaceBoundingBox):
@@ -28,7 +33,7 @@ def anonymize_face_white(*, image: np.ndarray, mask: FaceBoundingBox):
 def anonymize_face_gauss(*, image: np.ndarray, mask: FaceBoundingBox):
     img_anon = np.array(image, dtype=float) / 255
     face_area = img_anon[mask.get_slice_area()]
-    img_anon[mask.get_slice_area()] = gaussian(face_area, sigma=3, channel_axis=-1)
+    img_anon[mask.get_slice_area()] = gaussian(face_area, sigma=3, channel_axis=-1)  # type: ignore
     return Image.fromarray((img_anon * 255).astype(np.uint8))
 
 
