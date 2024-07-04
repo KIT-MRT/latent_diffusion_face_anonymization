@@ -8,6 +8,10 @@ from io import BytesIO
 import base64
 from skimage.filters import gaussian
 
+PERSON_LABEL_ID = 24
+RIDER_LABEL_ID = 25
+
+
 
 class FaceBoundingBox:
     def __init__(self, bounding_box_list):
