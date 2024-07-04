@@ -3,6 +3,7 @@ from PIL import Image
 import numpy as np
 import requests
 import io
+import re
 from io import BytesIO
 import base64
 from skimage.filters import gaussian
@@ -83,7 +84,6 @@ def get_face_cutout(image, mask_dict):
     return Image.fromarray(face_cutout_np)
 
 
-def encode_image_mask_to_b64(init_img, mask_img):
 def get_persons_cutout_and_mask(img_dict):
     image = preprocess_image(img_dict["image_file"])
     inst_image = preprocess_image(img_dict["instance_ids_file"])
@@ -124,6 +124,8 @@ def get_unique_person_pixel_as_list(inst_ids_img, label_ids_img):
         unique_person_pixel = np.where(inst_ids_img == idx)
         unique_person_pixel_list.append(unique_person_pixel)
     return unique_person_pixel_list
+
+def encode_image_mask_to_b64(init_img, mask_img):
     init_img_bytes = BytesIO()
     init_img.save(init_img_bytes, format="png")
     init_img_b64 = base64.b64encode(init_img_bytes.getvalue())
