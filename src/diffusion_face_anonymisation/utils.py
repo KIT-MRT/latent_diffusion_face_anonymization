@@ -20,6 +20,9 @@ class FaceBoundingBox:
     def get_slice_area(self):
         return (slice(self.ytl, self.ybr), slice(self.xtl, self.xbr))
 
+def get_image_id(full_image_string):
+    match = re.search(r"\w+_\d+_\d+", full_image_string)
+    return match.group(0)
 
 
 def preprocess_image(path_to_image):
@@ -53,6 +56,16 @@ def add_file_paths_to_image_mask_dict(file_paths, image_mask_dict, file_key):
             image_mask_dict[image_name][file_key] = file
     return image_mask_dict
 
+def add_file_path_to_body_mask_dict(file_paths, body_mask_dict, file_key):
+    for file in file_paths:
+        image_name = file.stem
+        image_id = get_image_id(image_name)
+        try:
+            body_mask_dict[image_id][file_key] = file
+        except KeyError:
+            body_mask_dict[image_id] = {}
+            body_mask_dict[image_id][file_key] = file
+    return body_mask_dict
 
 def add_inpainted_faces_to_orig_img(image, inpainted_img_list, mask_dict_list):
     img_np = np.array(image)
@@ -71,6 +84,46 @@ def get_face_cutout(image, mask_dict):
 
 
 def encode_image_mask_to_b64(init_img, mask_img):
+def get_persons_cutout_and_mask(img_dict):
+    image = preprocess_image(img_dict["image_file"])
+    inst_image = preprocess_image(img_dict["instance_ids_file"])
+    if "label_ids_file" in img_dict:
+        label_img = preprocess_image(img_dict["label_ids_file"])
+        unique_person_pixel_list = get_unique_person_pixel_as_list(inst_image, label_img)
+        persons_white_mask_list = get_persons_white_mask_as_list(image, unique_person_pixel_list)
+        persons_cutout_list = get_persons_cutout_as_list(image, unique_person_pixel_list)
+    else:
+        person_pixel = np.where(inst_image == 255)
+        black_img = np.full(image.shape, (255, 255, 255), dtype=image.dtype)
+        black_img[person_pixel] = image[person_pixel]
+        persons_cutout_list = [black_img]
+        persons_white_mask_list = [inst_image]
+    return persons_cutout_list, persons_white_mask_list
+def get_persons_white_mask_as_list(image, unique_person_pixel_list):
+    persons_white_mask_list = []
+    for person_pixel in unique_person_pixel_list:
+        black_img = np.zeros(image.shape, dtype=image.dtype)
+        black_img[person_pixel] = (255,255,255)
+        persons_white_mask_list.append(black_img)
+    return persons_white_mask_list
+
+def get_persons_cutout_as_list(image, unique_person_pixel_list):
+    persons_cutout_list = []
+    for person_pixel in unique_person_pixel_list:
+        black_img = np.full(image.shape, (255, 255, 255), dtype=image.dtype)
+        black_img[person_pixel] = image[person_pixel]
+        persons_cutout_list.append(black_img)
+    return persons_cutout_list
+
+def get_unique_person_pixel_as_list(inst_ids_img, label_ids_img):
+    unique_person_pixel_list = []
+    pixels_with_persons = np.where((label_ids_img == PERSON_LABEL_ID) | (label_ids_img == RIDER_LABEL_ID))
+    pixels_with_unique_ids = inst_ids_img[pixels_with_persons]
+    list_of_unique_ids = np.unique(pixels_with_unique_ids)
+    for idx in list_of_unique_ids:
+        unique_person_pixel = np.where(inst_ids_img == idx)
+        unique_person_pixel_list.append(unique_person_pixel)
+    return unique_person_pixel_list
     init_img_bytes = BytesIO()
     init_img.save(init_img_bytes, format="png")
     init_img_b64 = base64.b64encode(init_img_bytes.getvalue())
@@ -141,3 +194,9 @@ def anonymize_face_pixelize(*, image, mask, pixels_per_block=8):
             img_anon[idx_v * pixels_per_block:(idx_v + 1) * pixels_per_block, idx_u * pixels_per_block:(idx_u + 1) * pixels_per_block] = mean
 
     return Image.fromarray(img_anon)
+def get_bb_from_mask(mask):
+    rows = np.any(mask, axis=1)
+    cols = np.any(mask, axis=0)
+    rmin, rmax = np.where(rows)[0][[0, -1]]
+    cmin, cmax = np.where(cols)[0][[0, -1]]
+    return (slice(rmin, rmax), slice(cmin, cmax))
