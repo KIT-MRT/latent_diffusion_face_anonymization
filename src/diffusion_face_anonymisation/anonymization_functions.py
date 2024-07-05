@@ -21,7 +21,22 @@ def define_anon_function(anon_method: str) -> Callable:
 
 
 def anonymize_face_ldfa(*, image: np.ndarray, mask: FaceBoundingBox):
-    pass
+
+    # Load the controlnet and the stable diffusion pipeline
+    controlnet = ControlNetModel.from_pretrained("diffusers/controlnet-canny-sdxl-1.0")
+    pipeline = StableDiffusionControlNetPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", controlnet=controlnet)
+
+    # Extract the face area
+    img_anon = np.array(image)
+    face_area = img_anon[mask.get_slice_area()]
+
+    # Generate the anonymized face using the LDFA model
+    anonymized_face = pipeline(face_area, prompt="anonymize face").images[0]
+
+    # Replace the original face area with the anonymized face
+    img_anon[mask.get_slice_area()] = np.array(anonymized_face)
+
+    return Image.fromarray(img_anon)
 
 
 def anonymize_face_white(*, image: np.ndarray, mask: FaceBoundingBox):
