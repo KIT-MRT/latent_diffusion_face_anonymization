@@ -28,23 +28,27 @@ The dockerfile is used to start container which runs the [Automatic1111](https:/
 ### Test
 The tests are not meant to be used as a unit test, but to show a quick script usage of our tooling. The tests are run on some samples from the [cityscapes](https://www.cityscapes-dataset.com/) dataset.
 ## Usage
-Please use the provided Docker container. Make sure that you have Docker Compose V2. See [Diff between V1 and V2](https://docs.docker.com/compose/migrate/#what-are-the-functional-differences-between-compose-v1-and-compose-v2)
-
-Prior to using this tool, please make sure that you have correctly set up the image, mask, anonymized, and weights volumes inside the `docker-compose.yml` file. 
-Furthermore, you can freely specify which GPU should be used.
-You can start the needed docker instances with `docker compose up`.
-The script will look for all images in the given root folder. The default extension is `png`. If you want to use other extension, you can provide a flag to the corresponding python scripts, e.g. `--image_extension=jpg`.
+### Anaconda
+First setup the anaconda environment  
+`conda create -n ldfa python=3.10`  
+then install pytorch with the correct cuda version:  
+`conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=11.8 -c pytorch -c nvidia` and xformers  
+`pip install xformers==v0.0.23.post1 --index-url https://download.pytorch.org/whl/cu118`.
+After this you need to install all necessary dependencies and the module itself with  
+`pip install -r requirements.txt && python setup.py install`
 
 Once the docker container is running you can generate masks using:
 ```shell
-docker compose exec anon python3 /tool/scripts/detect_faces.py --image_dir=/data/images --mask_dir=/data/masks
+python3 detect_faces.py --image_dir=/data/images --mask_dir=/data/masks
 ```
 
 and anonymize the detected faces using:
 
 ```shell
-docker compose exec anon python3 /tool/scripts/ldfa_face_anon.py --image_dir=/data/images --mask_dir=/data/masks --output_dir=/data/anonymized
+python3 face_anonymization.py --image_dir=/data/images --mask_dir=/data/masks --output_dir=/data/anonymized --anon_function ldfa
 ```
+
+You can also use the other anonymization functions implemented. See `python3 face_anonymization.py --help` for more functions.
 
 # Citation
 
