@@ -1,10 +1,8 @@
-import json
 from PIL import Image
 import numpy as np
 from pathlib import Path
 
 import diffusion_face_anonymisation.io_functions as dfa_io
-from diffusion_face_anonymisation.bounding_box_utils import Face
 
 
 def get_image_mask_dict(image_dir: str, mask_dir: str) -> dict:
@@ -30,23 +28,6 @@ def get_image_mask_dict(image_dir: str, mask_dir: str) -> dict:
 def preprocess_image(path_to_image: str) -> np.ndarray:
     image = Image.open(path_to_image)
     return np.array(image)
-
-
-def get_faces_from_file(path_to_bounding_box_file: Path) -> list[Face]:
-    with open(path_to_bounding_box_file, "r") as bounding_box_file_json:
-        bb_dict = json.load(bounding_box_file_json)
-    faces = []
-    for face in bb_dict["face"]:
-        faces.append(Face(face))
-    return faces
-
-
-def add_face_cutout_and_mask_img(faces: list[Face], image: np.ndarray):
-    for face in faces:
-        face.set_face_cutout(image)
-        mask_image_np = np.zeros((image.shape[0], image.shape[1]), np.uint8)
-        mask_image_np[face.bounding_box.get_slice_area()] = 255
-        face.set_mask_image(mask_image_np)
 
 
 def add_file_paths_to_image_mask_dict(
