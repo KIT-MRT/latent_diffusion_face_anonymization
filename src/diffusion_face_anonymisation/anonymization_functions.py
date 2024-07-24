@@ -1,13 +1,16 @@
+import logging
+from pathlib import Path
+from typing import Callable
+
 import numpy as np
 from PIL import Image
-from pathlib import Path
 from skimage.filters import gaussian
-from typing import Callable
-import logging
-from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
 
-from diffusion_face_anonymisation.utils import FaceBoundingBox
-import diffusion_face_anonymisation.utils as dfa_utils
+from diffusion_face_anonymisation.face import (
+    Face,
+    add_face_cutout_and_mask_img,
+)
+from diffusion_face_anonymisation.io_functions import get_faces_from_file
 
 
 def define_anon_function(anon_method: str) -> Callable:
@@ -24,55 +27,51 @@ def anonymize_face_ldfa(*, image: np.ndarray, mask: FaceBoundingBox):
     pass
 
 
-def anonymize_face_white(*, image: np.ndarray, mask: FaceBoundingBox):
-    img_anon = np.array(image)
-    img_anon[mask.get_slice_area()] = [255, 255, 255]
-    return Image.fromarray(img_anon)
+def anonymize_face_white(*, face: Face) -> Face:
+    face.face_anon = Image.fromarray(np.ones_like(np.array(face.face_cutout)) * 255)
+    return face
 
 
-def anonymize_face_gauss(*, image: np.ndarray, mask: FaceBoundingBox):
-    img_anon = np.array(image, dtype=float) / 255
-    face_area = img_anon[mask.get_slice_area()]
-    img_anon[mask.get_slice_area()] = gaussian(face_area, sigma=3, channel_axis=-1)  # type: ignore
-    return Image.fromarray((img_anon * 255).astype(np.uint8))
+def anonymize_face_gauss(*, face: Face) -> Face:
+    face.face_anon = gaussian(
+        np.array(face.face_cutout),
+        sigma=3,
+        channel_axis=-1,  # type: ignore
+    )
+    return face
 
 
-def anonymize_face_pixelize(*, image, pixels_per_block=8):
-    img_anon = np.array(image)
+def anonymize_face_pixelize(*, face: Face) -> Face:
+    pixels_per_block = 8
+    face_img = np.array(face.face_cutout.copy())
 
-    for idx_v in range(img_anon.shape[0] // pixels_per_block):
-        for idx_u in range(img_anon.shape[1] // pixels_per_block):
-            block = img_anon[
+    for idx_v in range(face_img.shape[0] // pixels_per_block):
+        for idx_u in range(face_img.shape[1] // pixels_per_block):
+            block = face_img[
                 idx_v * pixels_per_block : (idx_v + 1) * pixels_per_block,
                 idx_u * pixels_per_block : (idx_u + 1) * pixels_per_block,
             ]
             mean = np.mean(
                 np.reshape(block, [pixels_per_block * pixels_per_block, 3]), axis=0
             )
-            img_anon[
+            face_img[
                 idx_v * pixels_per_block : (idx_v + 1) * pixels_per_block,
                 idx_u * pixels_per_block : (idx_u + 1) * pixels_per_block,
             ] = mean
-
-    return Image.fromarray(img_anon)
+    face.face_anon = Image.fromarray(face_img)
+    return face
 
 
 def anonymize_image(image_file: Path, mask_file: Path, anon_function: Callable):
-
     image = Image.open(image_file)
 
-    all_faces_bb_list = dfa_utils.get_face_bounding_box_list_from_file(mask_file)
-    mask_dict_list = dfa_utils.convert_bb_to_mask_dict_list(
-        all_faces_bb_list, image_width=image.width, image_height=image.height
-    )
-    logging.debug(f"Found {len(mask_dict_list)} faces in image {Path(image_file).stem}")
+    faces = get_faces_from_file(mask_file)
+    faces = add_face_cutout_and_mask_img(faces=faces, image=np.array(image))
+    logging.debug(f"Found {len(faces)} faces in image {Path(image_file).stem}")
+    final_img = np.array(image)
 
-    inpainted_img_list = [
-        anon_function(image=image, mask=mask_dict["bb"])  # type: ignore
-        for mask_dict in mask_dict_list
-    ]
+    for face in faces:
+        face = anon_function(face=face)
+        final_img = face.add_anon_face_to_image(final_img)
 
-    final_img = dfa_utils.add_inpainted_faces_to_orig_img(
-        image, inpainted_img_list, mask_dict_list
-    )
-    return final_img
+    return Image.fromarray(final_img)
