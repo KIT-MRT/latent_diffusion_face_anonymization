@@ -2,6 +2,7 @@ import unittest
 import os
 import logging
 from pathlib import Path
+from diffusion_face_anonymisation.face import add_face_cutout_and_mask_img
 import diffusion_face_anonymisation.utils as dfa_utils
 import diffusion_face_anonymisation.io_functions as dfa_io
 
@@ -32,8 +33,8 @@ class TestSingleMaskHandling(unittest.TestCase):
 
         for i, entry in enumerate(image_mask_dict.values()):
             image = dfa_utils.preprocess_image(entry["image_file"])
-            faces = dfa_utils.get_faces_from_file(entry["mask_file"])
-            dfa_utils.add_face_cutout_and_mask_img(faces, image)
+            faces = dfa_io.get_faces_from_file(entry["mask_file"])
+            faces = add_face_cutout_and_mask_img(faces, image)
             for j, face in enumerate(faces):
                 face.save(Path("/storage_local/roesch/ldba/faces_tmp"), i, j)
 
