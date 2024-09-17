@@ -23,7 +23,7 @@ def define_anon_function(anon_method: str) -> Callable:
     return anon_functions.get(anon_method)  # type: ignore
 
 
-def anonymize_face_ldfa(*, image: np.ndarray, mask: FaceBoundingBox):
+def anonymize_face_ldfa(*, face: Face):
     pass
 
 
