@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from pathlib import Path
 from PIL import Image
 
@@ -10,7 +11,7 @@ class Face:
         self.face_cutout_resized: Image.Image
         self.mask_image: Image.Image
         self.mask_image_resized: Image.Image
-        self.face_anon: Image.Image
+        self.face_anon: Image.Image | None = None
 
     def set_face_cutout(self, image: np.ndarray):
         self.face_cutout = Image.fromarray(image[self.bounding_box.get_slice_area()])
@@ -27,8 +28,10 @@ class Face:
         return image
 
     def save(self, save_path: Path, img_id: int, face_id: int):
-        self.face_anon.save(f"{save_path}/face_anon_{img_id}_{face_id}.png")
+        os.makedirs(save_path, exist_ok=True)
         self.mask_image.save(f"{save_path}/mask_{img_id}_{face_id}.png")
+        if self.face_anon:
+            self.face_anon.save(f"{save_path}/face_anon_{img_id}_{face_id}.png")
 
 
 class BoundingBox:
