@@ -7,6 +7,7 @@ from pathlib import Path
 
 import diffusion_face_anonymisation.utils as dfa_utils
 import diffusion_face_anonymisation.io_functions as dfa_io
+from diffusion_face_anonymisation.face import add_face_cutout_and_mask_img
 
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import (
     StableDiffusionInpaintPipeline,
@@ -60,10 +61,10 @@ class FaceInpaintingTest(unittest.TestCase):
             png_files, image_mask_dict, "image_file"
         )
 
-        for i, entry in enumerate(image_mask_dict.values()):
+        for img_id, entry in enumerate(image_mask_dict.values()):
             image = dfa_utils.preprocess_image(entry["image_file"])
-            faces = dfa_utils.get_faces_from_file(entry["mask_file"])
-            dfa_utils.add_face_cutout_and_mask_img(faces, image)
+            faces = dfa_io.get_faces_from_file(entry["mask_file"])
+            faces = add_face_cutout_and_mask_img(faces, image)
             ldfa_image = np.array(image)
             for j, face in enumerate(faces):
                 face.resize(width=512, height=512)
@@ -72,13 +73,13 @@ class FaceInpaintingTest(unittest.TestCase):
                     face.mask_image_resized, blur_factor=3
                 )
                 anon_image = self.sd_pipe.run(
-                    face.face_image_resized, face.mask_image_resized
+                    face.face_cutout_resized, face.mask_image_resized
                 )
-                face.anon_face = anon_image.images[0]
-                ldfa_image = face.add_to_image(ldfa_image)
-                face.save(Path("/storage_local/roesch/ldba/faces_tmp"), i, j)
+                face.face_anon = anon_image.images[0]
+                ldfa_image = face.add_anon_face_to_image(ldfa_image)
+                face.save(Path("/storage_local/roesch/ldba/faces_tmp"), img_id, j)
             Image.fromarray(ldfa_image).save(
-                f"/storage_local/roesch/ldba/faces_tmp/anon_{i}.png"
+                f"/storage_local/roesch/ldba/faces_tmp/anon_{img_id}.png"
             )
 
 

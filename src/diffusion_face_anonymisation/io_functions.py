@@ -3,7 +3,8 @@ from pathlib import Path
 import yaml
 import argparse
 import logging
-from PIL import Image
+import json
+from diffusion_face_anonymisation.face import Face
 
 
 def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
@@ -59,6 +60,15 @@ def load_config(config_yaml: str) -> dict:
     with open(config_yaml, "r") as config_yaml_file:
         config_dict = yaml.load(config_yaml_file, yaml.SafeLoader)
     return config_dict
+
+
+def get_faces_from_file(face_mask_file_path: Path) -> list[Face]:
+    with open(face_mask_file_path, "r") as face_mask_file:
+        faces_dict = json.load(face_mask_file)
+    faces = []
+    for face in faces_dict["face"]:
+        faces.append(Face(face))
+    return faces
 
 
 def save_anon_image(anon_img, image_file: str, output_dir: Path, anon_function: str):
