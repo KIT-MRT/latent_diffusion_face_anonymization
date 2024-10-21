@@ -60,39 +60,56 @@ def detect_faces_in_files(image_files: list[Path], image_dir: Path, output_dir: 
 class BodyDetector:
     def __init__(self):
         self.model = YOLO("yolov8x-seg.pt")
-    
-    def detect(self, img_file):
-        if not os.path.exists(img_file):
-            raise FileNotFoundError(f"Image file '{img_file}' not found.")      
-        img_bgr = cv2.imread(img_file)
-        if img_bgr is None:
-            raise RuntimeError(f"Failed to read image file '{img_file}'.")
-        
-      
-        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-        img_height, img_width, _ = img_rgb.shape
+        logging.info("YOLO model loaded successfully.")
 
+    def body_detect_in_image(self, img_file: Path):
+        logging.info(f"Starting body detection for image: {img_file}")
         
-        results = self.model(img_rgb,retina_masks=True)
+        img_bgr = cv2.imread(str(img_file))
+        img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        logging.info(f"Image '{img_file}' successfully read and converted to RGB.")
         
-   
+        results = self.model(img_rgb, retina_masks=True)
+        logging.info(f"Model inference completed for image: {img_file}")
+        
         persons_cutout = []
         persons_white_mask = []
         person_class_index = 0  
-        
+
         for result in results:
             boxes = result.boxes
             masks = result.masks
             cls = boxes.cls.tolist()
-        
+
             for i in range(len(masks)):
-             
                 if int(cls[i]) == person_class_index:
                     mask = masks[i].data.cpu().numpy()[0]
                     person_pixel = np.where(mask == 1)
+
                     cutout_img = np.full(img_rgb.shape, (255, 255, 255), dtype=img_rgb.dtype)
                     cutout_img[person_pixel] = img_rgb[person_pixel]
+
                     persons_cutout.append(cutout_img)
                     persons_white_mask.append(mask)
-        
+
+        logging.info(f"Detected {len(persons_cutout)} person(s) in image: {img_file}")
         return persons_cutout, persons_white_mask
+
+    def body_detect_in_files(self, image_files: list[Path], output_dir: Path):
+        logging.info(f"Starting body detection for {len(image_files)} images.")
+        for img_file in tqdm(image_files):
+            try:
+                logging.info(f"Processing image: {img_file}")
+                persons_cutout, persons_white_mask = self.body_detect_in_image(img_file)
+
+                
+                output_file = output_dir / f"{img_file.stem}_bodies.json"
+                with open(output_file, "w+", encoding="utf8") as json_file:
+                    json.dump(
+                        {
+                         "masks": [mask.tolist() for mask in persons_white_mask]}, 
+                        json_file
+                    )
+                logging.info(f"Results saved to: {output_file}")
+            except Exception as e:
+                logging.error(f"Error processing image {img_file}: {e}")
