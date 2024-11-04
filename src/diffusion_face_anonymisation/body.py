@@ -4,8 +4,7 @@ from pathlib import Path
 from PIL import Image
 
 class Body:
-    def __init__(self, mask: np.ndarray):
-        
+    def __init__(self, mask: np.ndarray): 
         self.body_cutout: Image.Image   
         self.body_mask = mask
         self.body_mask_image: Image.Image = Image.fromarray(mask.astype(np.uint8))
