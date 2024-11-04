@@ -13,8 +13,8 @@ class Body:
         self.body_anon: Image.Image | None = None  
 
     def set_body_cutout(self, image: np.ndarray):
-        mask_3d = np.stack([np.array(self.body_mask_image)] * 3, axis=-1)  
-        self.body_cutout = Image.fromarray(np.where(mask_3d == 1, image, 0).astype(np.uint8))
+        expanded_body_mask = np.stack([np.array(self.body_mask_image)] * 3, axis=-1)  
+        self.body_cutout = Image.fromarray(np.where(expanded_body_mask == 1, image, 0).astype(np.uint8))
     
     def resize(self, width: int, height: int):
         self.body_cutout_resized = self.body_cutout.resize((width, height))
