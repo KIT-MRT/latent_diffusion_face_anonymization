@@ -22,7 +22,7 @@ class BodyDetectionTest(unittest.TestCase):
     def test_body_detection(self):
         png_files = dfa_io.glob_files_by_extension(self.test_image_base_path, "png")
         image_files = [Path(os.path.join(self.test_image_base_path, img)) for img in png_files]
-        dfa_bd.body_detect_in_files(image_files=image_files, output_dir=Path("/home/gopi/Documents/Saves/Annoation_mask"))  
+        dfa_bd.body_detect_in_files(image_files=image_files, output_dir=Path("/tmp"))  
 
         logging.info(f"Body detection test completed for {len(image_files)} images")
 
