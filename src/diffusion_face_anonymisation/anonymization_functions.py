@@ -4,12 +4,24 @@ from typing import Callable, Union
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
+import io
+import base64
 
 
-from src.diffusion_face_anonymisation.body import Body, add_body_cutout_and_mask_img
-from src.diffusion_face_anonymisation.io_functions import get_bodies_from_file
-from src.diffusion_face_anonymisation.face import Face, add_face_cutout_and_mask_img
-from src.diffusion_face_anonymisation.io_functions import get_faces_from_file
+from diffusion_face_anonymisation.body import Body, add_body_cutout_and_mask_img
+from diffusion_face_anonymisation.io_functions import get_bodies_from_file
+from diffusion_face_anonymisation.face import Face, add_face_cutout_and_mask_img
+from diffusion_face_anonymisation.io_functions import get_faces_from_file
+from diffusion_face_anonymisation.face import (
+    Face,
+    add_face_cutout_and_mask_img,
+)
+from diffusion_face_anonymisation.io_functions import get_faces_from_file
+from diffusion_face_anonymisation.utils import (
+    encode_image_mask_to_b64,
+    fill_png_payload,
+    send_request_to_api,
+)
 
 
 def define_anon_function(anon_method: str) -> Callable:
