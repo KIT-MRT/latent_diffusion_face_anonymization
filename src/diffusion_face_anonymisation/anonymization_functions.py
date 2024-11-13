@@ -5,12 +5,19 @@ from typing import Callable
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
+import io
+import base64
 
 from diffusion_face_anonymisation.face import (
     Face,
     add_face_cutout_and_mask_img,
 )
 from diffusion_face_anonymisation.io_functions import get_faces_from_file
+from diffusion_face_anonymisation.utils import (
+    encode_image_mask_to_b64,
+    fill_png_payload,
+    send_request_to_api,
+)
 
 
 def define_anon_function(anon_method: str) -> Callable:
@@ -24,7 +31,16 @@ def define_anon_function(anon_method: str) -> Callable:
 
 
 def anonymize_face_ldfa(*, face: Face):
-    pass
+    init_img_b64, mask_b64 = encode_image_mask_to_b64(face.face_cutout, face.mask_image)
+    png_payload = fill_png_payload(init_img_b64, mask_b64)
+    inpainted_img_b64 = send_request_to_api(png_payload)
+
+    def convert_b64_to_pil(img_b64):
+        return Image.open(io.BytesIO(base64.b64decode(img_b64.split(",", 1)[0])))
+
+    face.face_anon = convert_b64_to_pil(inpainted_img_b64)
+
+    return face
 
 
 def anonymize_face_white(*, face: Face) -> Face:
