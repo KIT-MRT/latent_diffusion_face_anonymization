@@ -24,7 +24,7 @@ class Face:
         self.mask_image_resized = self.mask_image.resize((width, height))
 
     def add_anon_face_to_image(self, image: np.ndarray):
-        image[self.bounding_box.get_slice_area()] = np.array(self.face_cutout)
+        image[self.bounding_box.get_slice_area()] = self.face_anon
         return image
 
     def save(self, save_path: Path, img_id: int, face_id: int):

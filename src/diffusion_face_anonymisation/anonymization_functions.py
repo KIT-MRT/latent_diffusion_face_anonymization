@@ -1,16 +1,24 @@
 import logging
+import inspect
 from pathlib import Path
 from typing import Callable
 
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
+import io
+import base64
 
 from diffusion_face_anonymisation.face import (
     Face,
     add_face_cutout_and_mask_img,
 )
 from diffusion_face_anonymisation.io_functions import get_faces_from_file
+from diffusion_face_anonymisation.utils import (
+    encode_image_mask_to_b64,
+    fill_png_payload,
+    send_request_to_api,
+)
 
 
 def define_anon_function(anon_method: str) -> Callable:
@@ -23,8 +31,19 @@ def define_anon_function(anon_method: str) -> Callable:
     return anon_functions.get(anon_method)  # type: ignore
 
 
-def anonymize_face_ldfa(*, face: Face):
-    pass
+def anonymize_face_ldfa(*, face: Face, img:Image.Image) -> Face:
+    init_img_b64, mask_b64 = encode_image_mask_to_b64(img, face.mask_image)
+    png_payload = fill_png_payload(init_img_b64, mask_b64)
+    inpainted_img_b64 = send_request_to_api(png_payload)
+
+    def convert_b64_to_pil(img_b64):
+        return Image.open(io.BytesIO(base64.b64decode(img_b64.split(",", 1)[0])))
+
+    inpainted_img = convert_b64_to_pil(inpainted_img_b64)
+    inpainted_img_np = np.array(inpainted_img)
+    face.face_anon = Image.fromarray(inpainted_img_np[face.bounding_box.get_slice_area()])
+
+    return face
 
 
 def anonymize_face_white(*, face: Face) -> Face:
@@ -34,7 +53,8 @@ def anonymize_face_white(*, face: Face) -> Face:
 
 def anonymize_face_gauss(*, face: Face) -> Face:
     face.face_anon = gaussian(
-        np.array(face.face_cutout),
+        np.array(face.face_cutout, dtype=np.uint8),
+        preserve_range=True,
         sigma=3,
         channel_axis=-1,  # type: ignore
     )
@@ -62,7 +82,7 @@ def anonymize_face_pixelize(*, face: Face) -> Face:
     return face
 
 
-def anonymize_image(image_file: Path, mask_file: Path, anon_function: Callable):
+def anonymize_image(image_file: Path, mask_file: Path, anon_function: Callable) -> Image.Image:
     image = Image.open(image_file)
 
     faces = get_faces_from_file(mask_file)
@@ -71,7 +91,11 @@ def anonymize_image(image_file: Path, mask_file: Path, anon_function: Callable):
     final_img = np.array(image)
 
     for face in faces:
-        face = anon_function(face=face)
+        # check if the function has an img parameter
+        if 'img' in inspect.signature(anon_function).parameters:
+            face = anon_function(face=face, img=image)
+        else:
+            face = anon_function(face=face)
         final_img = face.add_anon_face_to_image(final_img)
 
     return Image.fromarray(final_img)

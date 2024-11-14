@@ -1,6 +1,9 @@
 from PIL import Image
 import numpy as np
 from pathlib import Path
+import requests
+from io import BytesIO
+import base64
 
 import diffusion_face_anonymisation.io_functions as dfa_io
 
@@ -49,3 +52,44 @@ def add_inpainted_faces_to_orig_img(
         inpainted_img_np = np.array(inpainted_img)
         img_np[face_slice_area] = inpainted_img_np[face_slice_area]
     return Image.fromarray(img_np)
+
+
+def encode_image_mask_to_b64(init_img: Image.Image, mask_img: Image.Image) -> tuple[bytes, bytes]:
+    init_img_bytes = BytesIO()
+    init_img.save(init_img_bytes, format="png")
+    init_img_b64 = base64.b64encode(init_img_bytes.getvalue())
+
+    mask_bytes = BytesIO()
+    mask_img.save(mask_bytes, format="png")
+    mask_img_b64 = base64.b64encode(mask_bytes.getvalue())
+    return init_img_b64, mask_img_b64
+
+
+def fill_png_payload(init_img_b64, mask_b64) -> dict:
+    return {
+        "init_images": ["data:image/png;base64," + init_img_b64.decode("utf-8")],
+        "mask": "data:image/png;base64," + mask_b64.decode("utf-8"),
+        "inpaint_full_res": True,
+        "inpaint_full_res_padding": 32,
+        "inpainting_fill": 1,
+        "cfg_scale": 1,
+        "sampler": "k_euler_a",
+    }
+
+
+def send_request_to_api(png_payload: dict):
+    ok = False
+    for _ in range(10):
+        response = requests.post(
+            url="http://127.0.0.1:7860/sdapi/v1/img2img", json=png_payload
+        )
+        if response.status_code == 200:
+            ok = True
+            break
+
+    if not ok:
+        raise RuntimeError("unable to send img2img request")
+
+    response_json = response.json()
+    image_base64 = response_json["images"][0]
+    return image_base64
