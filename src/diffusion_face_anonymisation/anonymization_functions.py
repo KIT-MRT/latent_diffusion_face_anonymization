@@ -53,7 +53,8 @@ def anonymize_face_white(*, face: Face) -> Face:
 
 def anonymize_face_gauss(*, face: Face) -> Face:
     face.face_anon = gaussian(
-        np.array(face.face_cutout),
+        np.array(face.face_cutout, dtype=np.uint8),
+        preserve_range=True,
         sigma=3,
         channel_axis=-1,  # type: ignore
     )
