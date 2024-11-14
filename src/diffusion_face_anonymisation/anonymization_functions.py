@@ -59,8 +59,6 @@ def anonymize_gauss(*, obj) -> object:
     return obj
 
 
-def anonymize_pixelize(*, obj) -> object:
-    pixels_per_block = 8
     if isinstance(obj, Face):
         obj_img = np.array(obj.face_cutout.copy())
     elif isinstance(obj, Body):
