@@ -4,18 +4,33 @@ from pathlib import Path
 from PIL import Image
 
 class Body:
-    def __init__(self, cutout: np.ndarray, mask: np.ndarray):
-        # Store the original cutout and mask
-        self.body_cutout = Image.fromarray(cutout)
-        self.mask_image = Image.fromarray(mask)
-        self.body_anon: Image.Image | None = None
-        
-    def set_anonymized_body(self, anonymized_image: np.ndarray):
-        self.body_anon = Image.fromarray(anonymized_image)
+    def __init__(self, mask: np.ndarray): 
+        self.body_cutout: Image.Image   
+        self.body_mask = mask
+        self.body_mask_image: Image.Image = Image.fromarray(mask.astype(np.uint8))
+        self.body_cutout_resized: Image.Image 
+        self.body_mask_resized: Image.Image 
+        self.body_anon: Image.Image | None = None  
 
-    def save(self, save_path: Path, img_id: int, body_id: int):
-        # Ensure the save path exists
-        os.makedirs(save_path, exist_ok=True)
-        # Save the cutout and mask at their original sizes
-        self.body_cutout.save(f"{save_path}/body_cutout_{img_id}_{body_id}.png")
-        self.mask_image.save(f"{save_path}/mask_{img_id}_{body_id}.png")
+    def set_body_cutout(self, image: np.ndarray):
+        expanded_body_mask = np.stack([np.array(self.body_mask_image)] * 3, axis=-1)  
+        self.body_cutout = Image.fromarray(np.where(expanded_body_mask == 1, image, 0).astype(np.uint8))
+    
+    def resize(self, width: int, height: int):
+        self.body_cutout_resized = self.body_cutout.resize((width, height))
+        self.body_mask_resized = self.body_mask_image.resize((width, height))
+
+    def add_anon_body_to_image(self, image: np.ndarray) -> np.ndarray:
+        body_anon_np = np.array(self.body_anon)
+        body_mask_np = np.array(self.body_mask)
+        image[body_mask_np > 0] = body_anon_np[body_mask_np > 0]
+        return image
+
+
+def add_body_cutout_and_mask_img(bodies: list[Body], image: np.ndarray):
+    for body in bodies:
+        body.set_body_cutout(image)  
+        mask_image_np = np.zeros((image.shape[0], image.shape[1]), np.uint8)
+        mask_image_np[body.body_mask > 0] = 255  
+        body.body_mask = Image.fromarray(mask_image_np)  
+    return bodies
