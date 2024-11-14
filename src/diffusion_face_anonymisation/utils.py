@@ -129,7 +129,7 @@ def add_inpainted_faces_to_orig_img(
     return Image.fromarray(img_np)
 
 
-def encode_image_mask_to_b64(init_img: Image.Image, mask_img: Image.Image):
+def encode_image_mask_to_b64(init_img: Image.Image, mask_img: Image.Image) -> tuple[bytes, bytes]:
     init_img_bytes = BytesIO()
     init_img.save(init_img_bytes, format="png")
     init_img_b64 = base64.b64encode(init_img_bytes.getvalue())
