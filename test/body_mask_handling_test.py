@@ -1,39 +1,35 @@
-import copy
 import unittest
 import os
+import logging
+from pathlib import Path
 import numpy as np
 from PIL import Image
+from diffusion_face_anonymisation.body import add_body_cutout_and_mask_img
 import diffusion_face_anonymisation.utils as dfa_utils
 import diffusion_face_anonymisation.io_functions as dfa_io
-# we only need this for testing because in deployment we don't need the numpy functionality
-def convert_pil_to_np(image):
-    return np.array(image)
+
 
 class TestSingleMaskHandling(unittest.TestCase):
     file_dir = os.path.dirname(os.path.realpath(__file__))
     test_image_base_path = os.path.abspath(os.path.join(file_dir, "leftImg8Bit"))
-    test_mask_base_path = os.path.abspath(os.path.join(file_dir, "gtFine"))
+    test_mask_base_path = os.path.abspath(os.path.join(file_dir, "mask_files"))
 
     def test_(self):
+        json_files = dfa_io.glob_files_by_extension(self.test_mask_base_path, "json")
         png_files = dfa_io.glob_files_by_extension(self.test_image_base_path, "png")
-        sem_mask_png_files = dfa_io.glob_files_by_extension(self.test_mask_base_path, "labelIds.png")
-        inst_mask_png_files = dfa_io.glob_files_by_extension(self.test_mask_base_path, "instanceIds.png")
-        assert(len(png_files) == len(sem_mask_png_files))
-        assert(len(sem_mask_png_files) == len(inst_mask_png_files))
         image_mask_dict = {}
-        image_mask_dict = dfa_utils.add_file_path_to_body_mask_dict(sem_mask_png_files, image_mask_dict, "label_ids_file")
-        image_mask_dict = dfa_utils.add_file_path_to_body_mask_dict(inst_mask_png_files, image_mask_dict, "instance_ids_file")
-        image_mask_dict = dfa_utils.add_file_path_to_body_mask_dict(png_files, image_mask_dict, "image_file")
-        # we could skip the dfa_utils in the tests to prevent going pil->numpy->pil but this way we actually test the functions we later use in the scripts
+        image_mask_dict = dfa_utils.add_file_paths_to_image_mask_dict(
+            json_files, image_mask_dict, "mask_file"
+        )
+        image_mask_dict = dfa_utils.add_file_paths_to_image_mask_dict(
+            png_files, image_mask_dict, "image_file"
+        )
         for i, entry in enumerate(image_mask_dict.values()):
-            # get one pedestrian mask with full white pixels
-            persons_cutout, persons_white_mask = dfa_utils.get_persons_cutout_and_mask(entry)
-            for j, (person_cutout, person_white_mask) in enumerate(zip(persons_cutout, persons_white_mask)):
-                # apply mask to image
-                person_cutout_pil = Image.fromarray(person_cutout)
-                person_white_mask_pil = Image.fromarray(person_white_mask)
-                person_cutout_pil.save(f"/tmp/dfa_body_cutout_test_{i}_{j}.png")
-                person_white_mask_pil.save(f"/tmp/dfa_body_mask_test_{i}_{j}.png")
+            image = dfa_utils.preprocess_image(entry["image_file"])
+            bodies = dfa_io.get_bodies_from_file(entry["mask_file"])
+            bodies = add_body_cutout_and_mask_img(bodies, image)
+            for j, body in enumerate(bodies):
+                body.save(Path("/temp"), i, j)
 
 
 if __name__ == "__main__":
