@@ -15,7 +15,6 @@ class Body:
         self.body_anon: Image.Image | None = None
 
     def set_body_cutout(self, image: np.ndarray):
-        """Set the cutout image based on the mask."""
         expanded_mask = np.stack([np.array(self.body_mask_image)] * 3, axis=-1)
         self.body_cutout = Image.fromarray(
             np.where(expanded_mask == 1, image, 0).astype(np.uint8)
