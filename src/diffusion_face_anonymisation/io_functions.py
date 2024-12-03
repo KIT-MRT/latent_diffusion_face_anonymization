@@ -47,7 +47,7 @@ def setup_face_detection_parser_and_parse_args() -> tuple[Path, Path]:
     return args.image_dir, args.mask_dir
 
 
-def glob_files_by_extension(base_dir: str, extension: str) -> list[Path]:
+def glob_files_by_extension(base_dir: str | Path, extension: str) -> list[Path]:
     files_list = []
     for root, _, files in os.walk(base_dir):
         files_list.extend(
