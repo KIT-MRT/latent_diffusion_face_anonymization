@@ -5,9 +5,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 from ultralytics import YOLO
-import torch
-
-
 import json
 
 from retinaface.RetinaFace import detect_faces as retina_face_detect_faces
@@ -57,6 +54,7 @@ def detect_faces_in_files(image_files: list[Path], image_dir: Path, output_dir: 
         with open(output_file, "w+", encoding="utf8") as json_file:
             json.dump({"face": faces}, json_file)
 
+
 class BodyDetector:
     def __init__(self):
         self.model = YOLO("yolov8x-seg.pt")
@@ -64,17 +62,17 @@ class BodyDetector:
 
     def body_detect_in_image(self, img_file: Path):
         logging.info(f"Starting body detection for image: {img_file}")
-        
+
         img_bgr = cv2.imread(str(img_file))
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         logging.info(f"Image '{img_file}' successfully read and converted to RGB.")
-        
+
         results = self.model(img_rgb, retina_masks=True)
         logging.info(f"Model inference completed for image: {img_file}")
-        
+
         persons_cutout = []
         persons_white_mask = []
-        person_class_index = 0  
+        person_class_index = 0
 
         for result in results:
             boxes = result.boxes
@@ -86,7 +84,9 @@ class BodyDetector:
                     mask = masks[i].data.cpu().numpy()[0]
                     person_pixel = np.where(mask == 1)
 
-                    cutout_img = np.full(img_rgb.shape, (255, 255, 255), dtype=img_rgb.dtype)
+                    cutout_img = np.full(
+                        img_rgb.shape, (255, 255, 255), dtype=img_rgb.dtype
+                    )
                     cutout_img[person_pixel] = img_rgb[person_pixel]
 
                     persons_cutout.append(cutout_img)
@@ -100,15 +100,13 @@ class BodyDetector:
         for img_file in tqdm(image_files):
             try:
                 logging.info(f"Processing image: {img_file}")
-                persons_cutout, persons_white_mask = self.body_detect_in_image(img_file)
+                _, persons_white_mask = self.body_detect_in_image(img_file)
 
-                
                 output_file = output_dir / f"{img_file.stem}_bodies.json"
                 with open(output_file, "w+", encoding="utf8") as json_file:
                     json.dump(
-                        {
-                         "masks": [mask.tolist() for mask in persons_white_mask]}, 
-                        json_file
+                        {"masks": [mask.tolist() for mask in persons_white_mask]},
+                        json_file,
                     )
                 logging.info(f"Results saved to: {output_file}")
             except Exception as e:
