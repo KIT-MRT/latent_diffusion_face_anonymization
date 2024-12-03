@@ -70,6 +70,18 @@ def get_faces_from_file(face_mask_file_path: Path) -> list[Face]:
         faces.append(Face(face))
     return faces
 
+def get_bodies_from_file(body_mask_file_path: Path) -> list[Body]:
+    with open(body_mask_file_path, "r") as body_mask_file:
+        body_masks_dict = json.load(body_mask_file)
+    bodies = []
+    for mask_list in body_masks_dict["masks"]:
+        mask_array = np.array(mask_list, dtype=np.uint8)
+        if len(mask_array.shape) == 3 and mask_array.shape[2] == 1:
+            mask_array = mask_array.squeeze(-1)
+        body = Body(mask_array)
+        bodies.append(body)
+    return bodies
+
 
 def save_anon_image(anon_img, image_file: str, output_dir: Path, anon_function: str):
     # TODO: implement debug img saving
