@@ -2,11 +2,17 @@ import unittest
 import os
 import logging
 from pathlib import Path
-import numpy as np
-from PIL import Image
 from diffusion_face_anonymisation.body import add_body_cutout_and_mask_img
 import diffusion_face_anonymisation.utils as dfa_utils
 import diffusion_face_anonymisation.io_functions as dfa_io
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("test_body_detection.log"), logging.StreamHandler()],
+)
+
+logger = logging.getLogger(__name__)
 
 
 class TestSingleMaskHandling(unittest.TestCase):
