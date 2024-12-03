@@ -1,7 +1,7 @@
 import logging
 import inspect
 from pathlib import Path
-from typing import Callable, Union
+from typing import Callable
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
@@ -19,7 +19,7 @@ from diffusion_face_anonymisation.utils import (
 )
 
 
-def define_anon_function(anon_method: str) -> Callable:
+def define_anon_function(anon_method: str) -> Callable | None:
     anon_functions = {
         "white": anonymize_white,
         "gauss": anonymize_gauss,
@@ -39,20 +39,23 @@ def anonymize_white(*, obj) -> object:
 
 def anonymize_gauss(*, obj) -> object:
     if isinstance(obj, Face):
-        obj.face_anon = Image.fromarray(
-            (
-                gaussian(np.array(obj.face_cutout), sigma=3, channel_axis=-1) * 255
-            ).astype(np.uint8)
+        obj.face_anon = gaussian(
+            np.array(obj.face_cutout, dtype=np.uint8),
+            preserve_range=True,
+            sigma=3,
+            channel_axis=-1,  # type: ignore
         )
     elif isinstance(obj, Body):
-        obj.body_anon = Image.fromarray(
-            (
-                gaussian(np.array(obj.body_cutout), sigma=3, channel_axis=-1) * 255
-            ).astype(np.uint8)
+        obj.body_anon = gaussian(
+            np.array(obj.body_cutout, dtype=np.uint8),
+            preserve_range=True,
+            sigma=3,
+            channel_axis=-1,  # type: ignore
         )
     return obj
 
 
+def anonymize_pixelize(*, obj, pixels_per_block=8) -> object:
     if isinstance(obj, Face):
         obj_img = np.array(obj.face_cutout.copy())
     elif isinstance(obj, Body):
@@ -81,7 +84,28 @@ def anonymize_gauss(*, obj) -> object:
 
 
 def anonymize_ldfa(*, obj) -> object:
+    if isinstance(obj, Face):
+        obj = anonymize_face_with_ldfa(face=obj, img=obj.mask_image)
+    elif isinstance(obj, Body):
+        pass
     return obj
+
+
+def anonymize_face_with_ldfa(*, face: Face, img: Image.Image) -> Face:
+    init_img_b64, mask_b64 = encode_image_mask_to_b64(img, face.mask_image)
+    png_payload = fill_png_payload(init_img_b64, mask_b64)
+    inpainted_img_b64 = send_request_to_api(png_payload)
+
+    def convert_b64_to_pil(img_b64):
+        return Image.open(io.BytesIO(base64.b64decode(img_b64.split(",", 1)[0])))
+
+    inpainted_img = convert_b64_to_pil(inpainted_img_b64)
+    inpainted_img_np = np.array(inpainted_img)
+    face.face_anon = Image.fromarray(
+        inpainted_img_np[face.bounding_box.get_slice_area()]
+    )
+
+    return face
 
 
 def anonymize_face_image(
@@ -94,7 +118,10 @@ def anonymize_face_image(
     logging.debug(f"Found {len(faces)} faces in image {Path(image_file).stem}")
 
     for face in faces:
-        face = anon_function(obj=face)
+        if "img" in inspect.signature(anon_function).parameters:
+            face = anon_function(face=face, img=image)
+        else:
+            face = anon_function(face=face)
         final_image = face.add_anon_face_to_image(final_image)
 
     return Image.fromarray(final_image)
