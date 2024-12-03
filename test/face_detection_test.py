@@ -1,6 +1,7 @@
 import unittest
 import os
 import logging
+from pathlib import Path
 
 import diffusion_face_anonymisation.io_functions as dfa_io
 import diffusion_face_anonymisation.utils as dfa_utils
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class FaceInpaintingTest(unittest.TestCase):
     file_dir = os.path.dirname(os.path.realpath(__file__))
-    test_image_base_path = os.path.abspath(os.path.join(file_dir, "leftImg8Bit"))
+    test_image_base_path = Path(os.path.abspath(os.path.join(file_dir, "leftImg8Bit")))
 
     def test_(self):
         png_files = dfa_io.glob_files_by_extension(self.test_image_base_path, "png")
@@ -27,7 +28,9 @@ class FaceInpaintingTest(unittest.TestCase):
             png_files, image_mask_dict, "image_file"
         )
         image_files = dfa_io.glob_files_by_extension(self.test_image_base_path, "png")
-        detect_faces_in_files(image_files, self.test_image_base_path, output_dir="/tmp")
+        detect_faces_in_files(
+            image_files, self.test_image_base_path, output_dir=Path("/tmp")
+        )
 
 
 if __name__ == "__main__":
