@@ -5,6 +5,7 @@ import argparse
 import logging
 import json
 from diffusion_face_anonymisation.face import Face
+from diffusion_face_anonymisation.body import Body
 
 
 def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
@@ -69,6 +70,7 @@ def get_faces_from_file(face_mask_file_path: Path) -> list[Face]:
     for face in faces_dict["face"]:
         faces.append(Face(face))
     return faces
+
 
 def get_bodies_from_file(body_mask_file_path: Path) -> list[Body]:
     with open(body_mask_file_path, "r") as body_mask_file:
