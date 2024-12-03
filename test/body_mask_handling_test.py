@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class TestSingleMaskHandling(unittest.TestCase):
     file_dir = os.path.dirname(os.path.realpath(__file__))
     test_image_base_path = os.path.abspath(os.path.join(file_dir, "leftImg8Bit"))
-    test_mask_base_path = os.path.abspath(os.path.join(file_dir, "mask_files"))
+    test_mask_base_path = os.path.abspath(os.path.join(file_dir, "gtFine"))
 
     def test_(self):
         json_files = dfa_io.glob_files_by_extension(self.test_mask_base_path, "json")
