@@ -12,9 +12,12 @@ PERSON_LABEL_ID = 24
 RIDER_LABEL_ID = 25
 
 
-def get_image_id(full_image_string):
+def get_image_id(full_image_string: str) -> str:
     match = re.search(r"\w+_\d+_\d+", full_image_string)
-    return match.group(0)
+    if match:
+        return match.group(0)
+    else:
+        raise ValueError("No match found")
 
 
 def get_image_mask_dict(image_dir: str, mask_dir: str) -> dict:
