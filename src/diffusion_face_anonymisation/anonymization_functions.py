@@ -19,7 +19,7 @@ from diffusion_face_anonymisation.utils import (
 )
 
 
-def define_anon_function(anon_method: str) -> Callable | None:
+def define_anon_function(anon_method: str):
     anon_functions = {
         "white": anonymize_white,
         "gauss": anonymize_gauss,
