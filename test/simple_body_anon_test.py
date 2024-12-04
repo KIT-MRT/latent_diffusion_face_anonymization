@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class BaseTestBodyAnon(unittest.TestCase, ABC):
     file_dir = os.path.dirname(os.path.realpath(__file__))
     test_image_base_path = os.path.abspath(os.path.join(file_dir, "leftImg8Bit"))
-    test_mask_base_path = os.path.abspath(os.path.join(file_dir, "annotations"))
+    test_mask_base_path = os.path.abspath(os.path.join(file_dir, "gtFine"))
     output_dir = Path("/tmp/ldfa_tests")
     os.makedirs(output_dir, exist_ok=True)
     anon_type = None
