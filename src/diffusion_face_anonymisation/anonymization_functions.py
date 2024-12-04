@@ -17,6 +17,7 @@ from diffusion_face_anonymisation.utils import (
     fill_png_payload,
     send_request_to_api,
 )
+from diffusion_face_anonymisation.body_detection import BodyDetector
 
 
 def define_anon_function(anon_method: str):
@@ -104,9 +105,7 @@ def anonymize_face_with_ldfa(*, face: Face, img: Image.Image) -> Face:
     return face
 
 
-def anonymize_face_image(
-    image_file: Path, mask_file: Path, anon_function: Callable
-) -> Image.Image:
+def anonymize_face_image(image_file: Path, mask_file: Path, anon_function: Callable) -> Image.Image:
     image = Image.open(image_file)
     final_image = np.array(image)
     faces = get_faces_from_file(mask_file)
@@ -124,11 +123,16 @@ def anonymize_face_image(
 
 
 def anonymize_body_image(
-    image_file: Path, mask_file: Path, anon_function: Callable
+    image_file: Path, mask_files: dict[str, str], anon_function: Callable, detect=False
 ) -> Image.Image:
     image = Image.open(image_file)
     final_image = np.array(image)
-    bodies = get_bodies_from_file(mask_file)
+    # get bodies via the body detector
+    if detect:
+        detector = BodyDetector()
+        bodies = detector.body_detect_in_image(image_file)
+    else:
+        bodies = get_bodies_from_file(mask_files)
     logging.debug(f"Found {len(bodies)} bodies in image {Path(image_file).stem}")
     bodies = add_body_cutout_and_mask_img(bodies, final_image)
     for body in bodies:

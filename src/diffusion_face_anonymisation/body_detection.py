@@ -1,58 +1,59 @@
 import cv2
-import numpy as np
 from ultralytics import YOLO
-import os
-import torch
+import logging
+from pathlib import Path
+from tqdm import tqdm
+import json
+
+from diffusion_face_anonymisation.body import Body
+
 
 class BodyDetector:
     def __init__(self):
         self.model = YOLO("yolov8x-seg.pt")
-    
-    def detect(self, img_file):
-        # Ensure the image file exists
-        if not os.path.exists(img_file):
-            raise FileNotFoundError(f"Image file '{img_file}' not found.")      
-        # Read the image
-        img_bgr = cv2.imread(img_file)
-        if img_bgr is None:
-            raise RuntimeError(f"Failed to read image file '{img_file}'.")
-        
-        # Convert BGR image to RGB
+        logging.info("YOLO model loaded successfully.")
+
+    def body_detect_in_image(self, img_file: Path) -> list[Body]:
+        logging.info(f"Starting body detection for image: {img_file}")
+
+        img_bgr = cv2.imread(str(img_file))
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-        img_height, img_width, _ = img_rgb.shape
-        
-        # Run YOLO on the RGB image
-        results = self.model(img_rgb,retina_masks=True)
-        
-        # Initialize lists to store cutouts and masks
-        persons_cutout = []
-        persons_white_mask = []
-        person_class_index = 0  # Assuming 'person' is class index 0
-        
+        logging.info(f"Image '{img_file}' successfully read and converted to RGB.")
+
+        results = self.model(img_rgb, retina_masks=True)
+        logging.info(f"Model inference completed for image: {img_file}")
+
+        body_list = []
+        person_class_index = 0
+
         for result in results:
             boxes = result.boxes
             masks = result.masks
             cls = boxes.cls.tolist()
-        
-            for i in range(len(masks)):
-                # If detected class is person, obtain mask and convert it to numpy array
-                if int(cls[i]) == person_class_index:
-                    mask = masks[i].data.cpu().numpy()[0]
-                    # Find pixels that are part of the person
-                    person_pixel = np.where(mask == 1)
 
-                    # Create a white image
-                    cutout_img = np.full(img_rgb.shape, (255, 255, 255), dtype=img_rgb.dtype)
+            for object_class_index, mask in zip(masks, cls):
+                if object_class_index == person_class_index:
+                    mask = mask.data.cpu().numpy()[0]
+                    body = Body(mask)
+                    body.set_body_cutout(img_rgb)
+                    body_list.append(body)
 
-                    # Cut out the person from the original image
-                    cutout_img[person_pixel] = img_rgb[person_pixel]
+        logging.info(f"Detected {len(body_list)} person(s) in image: {img_file}")
+        return body_list
 
-                    # Convert the cutout image back to BGR for display with OpenCV if needed
-                    #cutout_img_bgr = cv2.cvtColor(cutout_img, cv2.COLOR_RGB2BGR)
+    def body_detect_in_files(self, image_files: list[Path], output_dir: Path):
+        logging.info(f"Starting body detection for {len(image_files)} images.")
+        for img_file in tqdm(image_files):
+            try:
+                logging.info(f"Processing image: {img_file}")
+                body_list = self.body_detect_in_image(img_file)
 
-                    # Append the cutout image and mask to the respective lists
-                    persons_cutout.append(cutout_img)
-                    persons_white_mask.append(mask)
-        
-        return persons_cutout, persons_white_mask
-
+                output_file = output_dir / f"{img_file.stem}_bodies.json"
+                with open(output_file, "w+", encoding="utf8") as json_file:
+                    json.dump(
+                        {"masks": [body.body_mask.tolist() for body in body_list]},
+                        json_file,
+                    )
+                logging.info(f"Results saved to: {output_file}")
+            except Exception as e:
+                logging.error(f"Error processing image {img_file}: {e}")

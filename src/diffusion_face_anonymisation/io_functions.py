@@ -4,8 +4,14 @@ import yaml
 import argparse
 import logging
 import json
+
 from diffusion_face_anonymisation.face import Face
 from diffusion_face_anonymisation.body import Body
+from diffusion_face_anonymisation.utils import (
+    preprocess_image,
+    get_unique_person_pixel_as_list,
+    get_bodies_from_image,
+)
 
 
 def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
@@ -37,9 +43,7 @@ def setup_face_detection_parser_and_parse_args() -> tuple[Path, Path]:
         prog="Face detection",
         description="Detects faces with Retina face and writes the bounding box coordinates to a json",
     )
-    parser.add_argument(
-        "--image_dir", required=True, type=str, help="Path to input directory"
-    )
+    parser.add_argument("--image_dir", required=True, type=str, help="Path to input directory")
     parser.add_argument(
         "--mask_dir", required=True, type=str, help="Path to masks (output) directory"
     )
@@ -51,9 +55,7 @@ def setup_face_detection_parser_and_parse_args() -> tuple[Path, Path]:
 def glob_files_by_extension(base_dir: str | Path, extension: str) -> list[Path]:
     files_list = []
     for root, _, files in os.walk(base_dir):
-        files_list.extend(
-            [Path(root, file) for file in files if file.endswith(extension)]
-        )
+        files_list.extend([Path(root, file) for file in files if file.endswith(extension)])
     return files_list
 
 
@@ -72,16 +74,15 @@ def get_faces_from_file(face_mask_file_path: Path) -> list[Face]:
     return faces
 
 
-def get_bodies_from_file(body_mask_file_path: Path) -> list[Body]:
-    with open(body_mask_file_path, "r") as body_mask_file:
-        body_masks_dict = json.load(body_mask_file)
-    bodies = []
-    for mask_list in body_masks_dict["masks"]:
-        mask_array = np.array(mask_list, dtype=np.uint8)
-        if len(mask_array.shape) == 3 and mask_array.shape[2] == 1:
-            mask_array = mask_array.squeeze(-1)
-        body = Body(mask_array)
-        bodies.append(body)
+def get_bodies_from_file(img_dict: dict[str, str]) -> list[Body]:
+    image = preprocess_image(img_dict["image_file"])
+    inst_image = preprocess_image(img_dict["instance_ids_file"])
+    if "label_ids_file" in img_dict:
+        label_img = preprocess_image(img_dict["label_ids_file"])
+        unique_person_pixel_list = get_unique_person_pixel_as_list(inst_image, label_img)
+        bodies = get_bodies_from_image(image, unique_person_pixel_list)
+    else:
+        bodies = []
     return bodies
 
 
