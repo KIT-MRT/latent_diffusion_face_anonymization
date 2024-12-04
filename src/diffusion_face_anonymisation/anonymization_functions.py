@@ -67,9 +67,7 @@ def anonymize_pixelize(*, obj, pixels_per_block=8) -> object:
                 idx_v * pixels_per_block : (idx_v + 1) * pixels_per_block,
                 idx_u * pixels_per_block : (idx_u + 1) * pixels_per_block,
             ]
-            mean = np.mean(
-                np.reshape(block, [pixels_per_block * pixels_per_block, 3]), axis=0
-            )
+            mean = np.mean(np.reshape(block, [pixels_per_block * pixels_per_block, 3]), axis=0)
             obj_img[
                 idx_v * pixels_per_block : (idx_v + 1) * pixels_per_block,
                 idx_u * pixels_per_block : (idx_u + 1) * pixels_per_block,
@@ -101,9 +99,7 @@ def anonymize_face_with_ldfa(*, face: Face, img: Image.Image) -> Face:
 
     inpainted_img = convert_b64_to_pil(inpainted_img_b64)
     inpainted_img_np = np.array(inpainted_img)
-    face.face_anon = Image.fromarray(
-        inpainted_img_np[face.bounding_box.get_slice_area()]
-    )
+    face.face_anon = Image.fromarray(inpainted_img_np[face.bounding_box.get_slice_area()])
 
     return face
 
