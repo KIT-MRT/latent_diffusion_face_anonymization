@@ -114,9 +114,9 @@ def anonymize_face_image(image_file: Path, mask_file: Path, anon_function: Calla
 
     for face in faces:
         if "img" in inspect.signature(anon_function).parameters:
-            face = anon_function(face=face, img=image)
+            face = anon_function(obj=face, img=image)
         else:
-            face = anon_function(face=face)
+            face = anon_function(obj=face)
         final_image = face.add_anon_face_to_image(final_image)
 
     return Image.fromarray(final_image)
