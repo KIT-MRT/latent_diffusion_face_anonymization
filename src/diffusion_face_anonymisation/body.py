@@ -31,7 +31,7 @@ class Body:
 
     def save(self, save_path: Path, img_id: int, body_id: int):
         os.makedirs(save_path, exist_ok=True)
-        self.body_mask_image.save(f"{save_path}/body_mask_{img_id}_{body_id}.png")
+        self.body_cutout.save(f"{save_path}/body_cutout_{img_id}_{body_id}.png")
         if self.body_anon:
             self.body_anon.save(f"{save_path}/body_anon_{img_id}_{body_id}.png")
 
