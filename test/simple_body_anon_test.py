@@ -38,14 +38,11 @@ class BaseTestBodyAnon(unittest.TestCase, ABC):
         assert self.anon_type is not None
         assert self.anon_function is not None
 
-        for entry in image_mask_dict.values():
+        for entry in self.image_mask_dict.values():
             image_file = entry["image_file"]
-            mask_file = entry["mask_file"]
-            logger.info(f"Processing image {image_file} with mask {mask_file}")
-            anon_img = anonymize_body_image(image_file, mask_file, self.anon_function)
-            dfa_io.save_anon_image(
-                anon_img, image_file, self.output_dir, self.anon_type
-            )
+            logger.info(f"Processing image {image_file} with mask {entry['label_ids_file']}")
+            anon_img = anonymize_body_image(image_file, entry, self.anon_function)
+            dfa_io.save_anon_image(anon_img, image_file, self.output_dir, self.anon_type)
 
 
 class TestBodyMaskAnon(BaseTestBodyAnon):
