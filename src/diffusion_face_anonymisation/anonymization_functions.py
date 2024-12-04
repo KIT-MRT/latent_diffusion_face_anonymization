@@ -33,7 +33,7 @@ def anonymize_white(*, obj) -> object:
     if isinstance(obj, Face):
         obj.face_anon = Image.fromarray(np.ones_like(np.array(obj.face_cutout)) * 255)
     elif isinstance(obj, Body):
-        obj.body_anon = Image.fromarray(np.ones_like(np.array(obj.body_cutout)) * 255)
+        obj.body_anon = obj.body_mask
     return obj
 
 
