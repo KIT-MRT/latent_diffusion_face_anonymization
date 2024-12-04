@@ -26,6 +26,9 @@ class BaseTestFaceAnon(unittest.TestCase, ABC):
     output_dir = Path("/tmp/ldfa_tests")
     os.makedirs(output_dir, exist_ok=True)
     anon_type = None
+    image_mask_dict = dfa_utils.get_image_mask_dict(
+        test_image_base_path, test_mask_base_path, method="face"
+    )
 
     def setUp(self):
         assert self.anon_type is not None
@@ -33,18 +36,14 @@ class BaseTestFaceAnon(unittest.TestCase, ABC):
 
     def run_test(self):
         assert self.anon_type is not None
-        image_mask_dict = dfa_utils.get_image_mask_dict(
-            self.test_image_base_path, self.test_mask_base_path
-        )
+        assert self.anon_function is not None
 
-        for entry in image_mask_dict.values():
+        for entry in self.image_mask_dict.values():
             image_file = entry["image_file"]
             mask_file = entry["mask_file"]
             logger.info(f"Processing image {image_file} with mask {mask_file}")
             anon_img = anonymize_face_image(image_file, mask_file, self.anon_function)
-            dfa_io.save_anon_image(
-                anon_img, image_file, self.output_dir, self.anon_type
-            )
+            dfa_io.save_anon_image(anon_img, image_file, self.output_dir, self.anon_type)
 
 
 class TestFaceMaskAnon(BaseTestFaceAnon):
