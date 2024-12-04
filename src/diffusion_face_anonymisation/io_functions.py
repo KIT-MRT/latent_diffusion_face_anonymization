@@ -7,11 +7,7 @@ import json
 
 from diffusion_face_anonymisation.face import Face
 from diffusion_face_anonymisation.body import Body
-from diffusion_face_anonymisation.utils import (
-    preprocess_image,
-    get_unique_person_pixel_as_list,
-    get_bodies_from_image,
-)
+import diffusion_face_anonymisation.utils as utils
 
 
 def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str]:
@@ -75,12 +71,12 @@ def get_faces_from_file(face_mask_file_path: Path) -> list[Face]:
 
 
 def get_bodies_from_file(img_dict: dict[str, str]) -> list[Body]:
-    image = preprocess_image(img_dict["image_file"])
-    inst_image = preprocess_image(img_dict["instance_ids_file"])
+    image = utils.preprocess_image(img_dict["image_file"])
+    inst_image = utils.preprocess_image(img_dict["instance_ids_file"])
     if "label_ids_file" in img_dict:
-        label_img = preprocess_image(img_dict["label_ids_file"])
-        unique_person_pixel_list = get_unique_person_pixel_as_list(inst_image, label_img)
-        bodies = get_bodies_from_image(image, unique_person_pixel_list)
+        label_img = utils.preprocess_image(img_dict["label_ids_file"])
+        unique_person_pixel_list = utils.get_unique_person_pixel_as_list(inst_image, label_img)
+        bodies = utils.get_bodies_from_image(image, unique_person_pixel_list)
     else:
         bodies = []
     return bodies
