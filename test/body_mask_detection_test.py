@@ -3,7 +3,7 @@ import os
 import logging
 from pathlib import Path
 import diffusion_face_anonymisation.io_functions as dfa_io
-from diffusion_face_anonymisation.detection_utils import BodyDetector
+from diffusion_face_anonymisation.body_detection import BodyDetector
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,12 +21,12 @@ class BodyDetectionTest(unittest.TestCase):
     def test_body_detection(self):
         bd = BodyDetector()
         png_files = dfa_io.glob_files_by_extension(self.test_image_base_path, "png")
-        image_files = [
-            Path(os.path.join(self.test_image_base_path, img)) for img in png_files
-        ]
-        bd.body_detect_in_files(image_files=image_files, output_dir=Path("/tmp"))
+        for i, image_file in enumerate(png_files):
+            bodies = bd.body_detect_in_image(image_file)
+            for j, body in enumerate(bodies):
+                body.save(Path("/tmp/ldfa_tests"), i, j)
 
-        logging.info(f"Body detection test completed for {len(image_files)} images")
+        logging.info(f"Body detection test completed for {len(png_files)} images")
 
 
 if __name__ == "__main__":
