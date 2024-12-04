@@ -13,7 +13,7 @@ import diffusion_face_anonymisation.io_functions as dfa_io
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("test_ldfa.log"), logging.StreamHandler()],
+    handlers=[logging.FileHandler("test_simple_body_anon.log"), logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)
