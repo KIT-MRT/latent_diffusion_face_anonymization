@@ -26,6 +26,9 @@ class BaseTestBodyAnon(unittest.TestCase, ABC):
     output_dir = Path("/tmp/ldfa_tests")
     os.makedirs(output_dir, exist_ok=True)
     anon_type = None
+    image_mask_dict = dfa_utils.get_image_mask_dict(
+        test_image_base_path, test_mask_base_path, method="body"
+    )
 
     def setUp(self):
         assert self.anon_type is not None
@@ -34,9 +37,6 @@ class BaseTestBodyAnon(unittest.TestCase, ABC):
     def run_test(self):
         assert self.anon_type is not None
         assert self.anon_function is not None
-        image_mask_dict = dfa_utils.get_image_mask_dict(
-            self.test_image_base_path, self.test_mask_base_path
-        )
 
         for entry in image_mask_dict.values():
             image_file = entry["image_file"]
