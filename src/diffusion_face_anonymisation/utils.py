@@ -6,7 +6,7 @@ import requests
 from io import BytesIO
 import base64
 
-from diffusion_face_anonymisation.io_functions import glob_files_by_extension
+import diffusion_face_anonymisation.io_functions as dfa_io
 from diffusion_face_anonymisation.body import Body
 
 PERSON_LABEL_ID = 24
@@ -24,16 +24,16 @@ def get_image_id(full_image_string: str) -> str:
 def get_image_mask_dict(image_dir: str, mask_dir: str, method: str) -> dict:
     image_mask_dict = {}
 
-    png_files = glob_files_by_extension(image_dir, "png")
+    png_files = dfa_io.glob_files_by_extension(image_dir, "png")
     image_mask_dict = add_file_paths_to_image_mask_dict(png_files, image_mask_dict, "image_file")
     if method == "face":
         mask_key = "mask_file"
-        json_files = glob_files_by_extension(mask_dir, "json")
+        json_files = dfa_io.glob_files_by_extension(mask_dir, "json")
         image_mask_dict = add_file_paths_to_image_mask_dict(json_files, image_mask_dict, mask_key)
     elif method == "body":
         mask_key = "label_ids_file"
-        instance_label_files = glob_files_by_extension(mask_dir, "instanceIds.png")
-        label_ids_files = glob_files_by_extension(mask_dir, "labelIds.png")
+        instance_label_files = dfa_io.glob_files_by_extension(mask_dir, "instanceIds.png")
+        label_ids_files = dfa_io.glob_files_by_extension(mask_dir, "labelIds.png")
         image_mask_dict = add_file_paths_to_image_mask_dict(
             label_ids_files, image_mask_dict, mask_key
         )
