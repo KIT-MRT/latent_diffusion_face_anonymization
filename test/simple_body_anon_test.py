@@ -30,10 +30,10 @@ class BaseTestBodyAnon(unittest.TestCase, ABC):
     def setUp(self):
         assert self.anon_type is not None
         self.anon_function = define_anon_function(self.anon_type)
-        assert self.anon_function is not None
 
     def run_test(self):
         assert self.anon_type is not None
+        assert self.anon_function is not None
         image_mask_dict = dfa_utils.get_image_mask_dict(
             self.test_image_base_path, self.test_mask_base_path
         )
