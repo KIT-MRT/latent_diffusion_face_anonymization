@@ -26,7 +26,7 @@ class FaceInpaintingTest(unittest.TestCase):
     test_mask_base_path = os.path.abspath(os.path.join(file_dir, "annotations"))
     output_dir = Path("/tmp/ldfa_tests")
     os.makedirs(output_dir, exist_ok=True)
-    anon_type = "ldfa"
+    anon_type = "lda"
 
     def test_(self):
         self.anon_function = define_anon_function(self.anon_type)
