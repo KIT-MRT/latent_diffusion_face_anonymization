@@ -32,6 +32,7 @@ class Body:
     def save(self, save_path: Path, img_id: int, body_id: int):
         os.makedirs(save_path, exist_ok=True)
         self.body_cutout.save(f"{save_path}/body_cutout_{img_id}_{body_id}.png")
+        self.body_mask_image.save(f"{save_path}/mask_{img_id}_{body_id}.png")
         if self.body_anon:
             self.body_anon.save(f"{save_path}/body_anon_{img_id}_{body_id}.png")
 
@@ -39,6 +40,5 @@ class Body:
 def add_body_cutout_and_mask_img(bodies: list[Body], image: np.ndarray) -> list[Body]:
     for body in bodies:
         body.set_body_cutout(image)
-        mask_image_np = np.zeros((image.shape[0], image.shape[1], 3), np.uint8)
-        body.body_mask_image = Image.fromarray(mask_image_np)
+        body.body_mask_image = Image.fromarray(body.body_mask)
     return bodies
