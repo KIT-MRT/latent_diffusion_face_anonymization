@@ -127,13 +127,15 @@ def anonymize_face_image(image_file: Path, mask_file: Path, anon_function: Calla
 
 
 def anonymize_body_image(
-    image_file: Path, mask_files: dict[str, str], anon_function: Callable, detect=False
-) -> Image.Image:
+    image_file: Path,
+    mask_files: dict[str, str],
+    anon_function: Callable,
+    detector: BodyDetector | None,
+) -> tuple[Image.Image, list[Body]]:
     image = Image.open(image_file)
     final_image = np.array(image)
     # get bodies via the body detector
-    if detect:
-        detector = BodyDetector()
+    if detector:
         bodies = detector.body_detect_in_image(image_file)
     else:
         bodies = get_bodies_from_file(mask_files)
