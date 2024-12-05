@@ -107,15 +107,13 @@ def add_inpainted_faces_to_orig_img(
     return Image.fromarray(img_np)
 
 
-def encode_image_mask_to_b64(init_img: Image.Image, mask_img: Image.Image) -> tuple[bytes, bytes]:
-    init_img_bytes = io.BytesIO()
-    init_img.save(init_img_bytes, format="png")
-    init_img_b64 = base64.b64encode(init_img_bytes.getvalue())
-
-    mask_bytes = io.BytesIO()
-    mask_img.save(mask_bytes, format="png")
-    mask_img_b64 = base64.b64encode(mask_bytes.getvalue())
-    return init_img_b64, mask_img_b64
+def encode_image_to_b64(
+    image: Image.Image,
+) -> bytes:
+    image_bytes = io.BytesIO()
+    image.save(image_bytes, format="png")
+    image_b64 = base64.b64encode(image_bytes.getvalue())
+    return image_b64
 
 
 def fill_face_payload(init_img_b64, mask_b64) -> dict:
@@ -144,7 +142,7 @@ def fill_body_payload(init_img_b64, mask_b64, pose_img_b64):
         "height": 768,
         "steps": 40,
         "sampler": "k_euler_a",
-        # "prompt": "RAW photo, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3",
+        "prompt": "RAW photo, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3",
         "negative_prompt": "nude, naked, nsfw, ugly,(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime), text, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck",
         "sd_model_checkpoint": "realisticVisionV60B1_v40VAE-inpainting.safetensors [82e14c46c6]",
         "alwayson_scripts": {
