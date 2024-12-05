@@ -171,7 +171,7 @@ def send_request_to_api(png_payload: dict):
             break
 
     if not ok:
-        raise RuntimeError("unable to send img2img request")
+        raise RuntimeError(f"Unable to send img2img request to API: {response.text}")
 
     response_json = response.json()
     image_base64 = response_json["images"][0]
