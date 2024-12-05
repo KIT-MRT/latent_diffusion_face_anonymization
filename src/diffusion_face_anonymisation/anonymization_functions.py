@@ -141,12 +141,12 @@ def anonymize_body_image(
         bodies = get_bodies_from_file(mask_files)
     logging.debug(f"Found {len(bodies)} bodies in image {Path(image_file).stem}")
     bodies = add_body_cutout_and_mask_img(bodies, final_image)
-    for i, body in enumerate(bodies):
-        body.save(Path("/tmp/ldfa_tests"), 0, i)
+    for body in bodies:
         if "img" in inspect.signature(anon_function).parameters:
             body = anon_function(obj=body, img=image)
         else:
             body = anon_function(obj=body)
+
         final_image = body.add_anon_body_to_image(final_image)
 
-    return Image.fromarray(final_image)
+    return Image.fromarray(final_image), bodies
