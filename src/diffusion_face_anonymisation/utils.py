@@ -3,7 +3,7 @@ import numpy as np
 import re
 from pathlib import Path
 import requests
-from io import BytesIO
+import io
 import base64
 
 import diffusion_face_anonymisation.io_functions as dfa_io
@@ -55,6 +55,10 @@ def get_image_mask_dict(image_dir: str, mask_dir: str, method: str) -> dict:
 def preprocess_image(path_to_image: str) -> np.ndarray:
     image = Image.open(path_to_image)
     return np.array(image)
+
+
+def convert_b64_to_pil(img_b64):
+    return Image.open(io.BytesIO(base64.b64decode(img_b64.split(",", 1)[0])))
 
 
 def add_file_paths_to_image_mask_dict(

@@ -5,8 +5,6 @@ from typing import Callable
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
-import io
-import base64
 
 from diffusion_face_anonymisation.face import Face, add_face_cutout_and_mask_img
 from diffusion_face_anonymisation.body import Body, add_body_cutout_and_mask_img
@@ -91,14 +89,12 @@ def anonymize_ldfa(*, obj) -> object:
 
 
 def anonymize_face_with_ldfa(*, face: Face, img: Image.Image) -> Face:
-    init_img_b64, mask_b64 = encode_image_mask_to_b64(img, face.mask_image)
-    png_payload = fill_png_payload(init_img_b64, mask_b64)
-    inpainted_img_b64 = send_request_to_api(png_payload)
+    init_img_b64 = utils.encode_image_to_b64(img)
+    mask_b64 = utils.encode_image_to_b64(face.mask_image)
+    png_payload = utils.fill_face_payload(init_img_b64, mask_b64)
+    inpainted_img_b64 = utils.send_request_to_api(png_payload)
 
-    def convert_b64_to_pil(img_b64):
-        return Image.open(io.BytesIO(base64.b64decode(img_b64.split(",", 1)[0])))
-
-    inpainted_img = convert_b64_to_pil(inpainted_img_b64)
+    inpainted_img = utils.convert_b64_to_pil(inpainted_img_b64)
     inpainted_img_np = np.array(inpainted_img)
     face.face_anon = Image.fromarray(inpainted_img_np[face.bounding_box.get_slice_area()])
 
