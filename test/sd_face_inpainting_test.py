@@ -7,7 +7,7 @@ import diffusion_face_anonymisation.utils as dfa_utils
 import diffusion_face_anonymisation.io_functions as dfa_io
 from diffusion_face_anonymisation.anonymization_functions import (
     define_anon_function,
-    anonymize_image,
+    anonymize_face_image,
 )
 
 
@@ -30,18 +30,17 @@ class FaceInpaintingTest(unittest.TestCase):
 
     def test_(self):
         self.anon_function = define_anon_function(self.anon_type)
+        assert self.anon_function is not None
         image_mask_dict = dfa_utils.get_image_mask_dict(
-            self.test_image_base_path, self.test_mask_base_path
+            self.test_image_base_path, self.test_mask_base_path, method="face"
         )
 
         for entry in image_mask_dict.values():
             image_file = entry["image_file"]
             mask_file = entry["mask_file"]
             logger.info(f"Processing image {image_file} with mask {mask_file}")
-            anon_img = anonymize_image(image_file, mask_file, self.anon_function)
-            dfa_io.save_anon_image(
-                anon_img, image_file, self.output_dir, self.anon_type
-            )
+            anon_img = anonymize_face_image(image_file, mask_file, self.anon_function)
+            dfa_io.save_anon_image(anon_img, image_file, self.output_dir, self.anon_type)
 
 
 if __name__ == "__main__":
