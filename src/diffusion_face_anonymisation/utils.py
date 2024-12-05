@@ -146,7 +146,7 @@ def fill_body_payload(init_img_b64, mask_b64, pose_img_b64):
         "sampler": "k_euler_a",
         # "prompt": "RAW photo, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3",
         "negative_prompt": "nude, naked, nsfw, ugly,(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime), text, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck",
-        "sd_model_checkpoint": "realisticVisionV40_v40VAE-inpainting.safetensors [82e14c46c6]",
+        "sd_model_checkpoint": "realisticVisionV60B1_v40VAE-inpainting.safetensors [82e14c46c6]",
         "alwayson_scripts": {
             "controlnet": {
                 "args": [
