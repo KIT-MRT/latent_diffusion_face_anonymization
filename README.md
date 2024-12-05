@@ -22,8 +22,8 @@ The dockerfile is used to start container which runs the [Automatic1111](https:/
 
 ### Scripts
 `detect_faces.py` - This script uses [RetinaFace](https://github.com/serengil/retinaface) to detect faces on a given dataset.  
-`ldfa_face_anon.py` - This script implements the LDFA anonymization method.  
-`simple_face_anon.py` - This script implements the naive anonymization methods cropping, gaussian noise and pixelaziation which are applied on detected faces. 
+`face_anonymization.py` - This script implements different functions for face anonymization.  
+`body_anonymization.py` - This script implements different functions for body anonymization. 
 
 ### Test
 The tests are not meant to be used as a unit test, but to show a quick script usage of our tooling. The tests are run on some samples from the [cityscapes](https://www.cityscapes-dataset.com/) dataset.
@@ -37,7 +37,19 @@ then install pytorch with the correct cuda version:
 After this you need to install all necessary dependencies and the module itself with  
 `pip install -r requirements.txt && python setup.py install`
 
-Once the docker container is running you can generate masks using:
+The stable diffusion interface is not included in the anaconda environment. You can use the docker container to run the stable diffusion interface.
+### Docker 
+First build the docker image with  
+```shell
+docker build -t ldfa .
+```
+Then you can run the docker container with  
+```shell
+docker run -p 7860:7860 ldfa 
+```
+
+### Face Anonymization
+Once the docker container is running you can generate masks using:  
 ```shell
 python3 detect_faces.py --image_dir=/data/images --mask_dir=/data/masks
 ```
@@ -45,10 +57,19 @@ python3 detect_faces.py --image_dir=/data/images --mask_dir=/data/masks
 and anonymize the detected faces using:
 
 ```shell
-python3 face_anonymization.py --image_dir=/data/images --mask_dir=/data/masks --output_dir=/data/anonymized --anon_function ldfa
+python3 face_anonymization.py --image_dir=/data/images --mask_dir=/data/masks --output_dir=/data/anonymized --anon_function lda
 ```
 
 You can also use the other anonymization functions implemented. See `python3 face_anonymization.py --help` for more functions.
+
+### Body Anonymization
+The body anonymization works similar to the face anonymization. You can use the `body_anonymization.py` script to anonymize the bodies.  
+```shell
+python3 body_anonymization.py --image_dir=/data/images --output_dir=/data/anonymized --anon_function lda
+```
+This script uses [YoloV8](https://docs.ultralytics.com/models/yolov8/) to generate the masks for the persons to be anonymized.
+
+You can also use the other anonymization functions implemented. See `python3 body_anonymization.py --help` for more functions.
 
 # Citation
 

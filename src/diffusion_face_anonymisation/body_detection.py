@@ -32,8 +32,11 @@ class BodyDetector:
 
             for mask, object_class_index in zip(masks, cls):
                 if object_class_index == person_class_index:
+                    mask_img = np.zeros_like(img_rgb)
                     mask = mask.data.cpu().numpy().astype(np.uint8)[0]
-                    body = Body(mask)
+                    person_pixel = np.where(mask == 1)
+                    mask_img[person_pixel] = (255, 255, 255)
+                    body = Body(mask_img)
                     body.set_body_cutout(img_rgb)
                     body_list.append(body)
 

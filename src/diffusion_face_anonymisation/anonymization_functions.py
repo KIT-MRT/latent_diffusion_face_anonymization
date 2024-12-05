@@ -5,18 +5,12 @@ from typing import Callable
 import numpy as np
 from PIL import Image
 from skimage.filters import gaussian
-import io
-import base64
 
 from diffusion_face_anonymisation.face import Face, add_face_cutout_and_mask_img
 from diffusion_face_anonymisation.body import Body, add_body_cutout_and_mask_img
 from diffusion_face_anonymisation.io_functions import get_faces_from_file
 from diffusion_face_anonymisation.io_functions import get_bodies_from_file
-from diffusion_face_anonymisation.utils import (
-    encode_image_mask_to_b64,
-    fill_png_payload,
-    send_request_to_api,
-)
+import diffusion_face_anonymisation.utils as utils
 from diffusion_face_anonymisation.body_detection import BodyDetector
 
 
@@ -25,7 +19,7 @@ def define_anon_function(anon_method: str):
         "white": anonymize_white,
         "gauss": anonymize_gauss,
         "pixel": anonymize_pixelize,
-        "ldfa": anonymize_ldfa,
+        "lda": anonymize_lda,
     }
     return anon_functions.get(anon_method)
 
@@ -82,27 +76,37 @@ def anonymize_pixelize(*, obj, pixels_per_block=8) -> object:
     return obj
 
 
-def anonymize_ldfa(*, obj) -> object:
+def anonymize_lda(*, obj, img: Image.Image) -> object:
     if isinstance(obj, Face):
-        obj = anonymize_face_with_ldfa(face=obj, img=obj.mask_image)
+        obj = anonymize_face_with_lda(face=obj, img=obj.mask_image)
     elif isinstance(obj, Body):
-        pass
+        obj = anonymize_body_with_lda(body=obj, img=img)
     return obj
 
 
-def anonymize_face_with_ldfa(*, face: Face, img: Image.Image) -> Face:
-    init_img_b64, mask_b64 = encode_image_mask_to_b64(img, face.mask_image)
-    png_payload = fill_png_payload(init_img_b64, mask_b64)
-    inpainted_img_b64 = send_request_to_api(png_payload)
+def anonymize_face_with_lda(*, face: Face, img: Image.Image) -> Face:
+    init_img_b64 = utils.encode_image_to_b64(img)
+    mask_b64 = utils.encode_image_to_b64(face.mask_image)
+    png_payload = utils.fill_face_payload(init_img_b64, mask_b64)
+    inpainted_img_b64 = utils.send_request_to_api(png_payload)
 
-    def convert_b64_to_pil(img_b64):
-        return Image.open(io.BytesIO(base64.b64decode(img_b64.split(",", 1)[0])))
-
-    inpainted_img = convert_b64_to_pil(inpainted_img_b64)
+    inpainted_img = utils.convert_b64_to_pil(inpainted_img_b64)
     inpainted_img_np = np.array(inpainted_img)
     face.face_anon = Image.fromarray(inpainted_img_np[face.bounding_box.get_slice_area()])
 
     return face
+
+
+def anonymize_body_with_lda(*, body: Body, img: Image.Image) -> Body:
+    init_img_b64 = utils.encode_image_to_b64(img)
+    mask_b64 = utils.encode_image_to_b64(body.body_mask_image)
+    pose_img_b64 = utils.encode_image_to_b64(body.body_cutout)
+    png_payload = utils.fill_body_payload(init_img_b64, mask_b64, pose_img_b64)
+    inpainted_img_b64 = utils.send_request_to_api(png_payload)
+    inpainted_img = utils.convert_b64_to_pil(inpainted_img_b64)
+    inpainted_img_np = np.array(inpainted_img)
+    body.body_anon = Image.fromarray(inpainted_img_np)
+    return body
 
 
 def anonymize_face_image(image_file: Path, mask_file: Path, anon_function: Callable) -> Image.Image:
@@ -123,20 +127,26 @@ def anonymize_face_image(image_file: Path, mask_file: Path, anon_function: Calla
 
 
 def anonymize_body_image(
-    image_file: Path, mask_files: dict[str, str], anon_function: Callable, detect=False
-) -> Image.Image:
+    image_file: Path,
+    mask_files: dict[str, str],
+    anon_function: Callable,
+    detector: BodyDetector | None,
+) -> tuple[Image.Image, list[Body]]:
     image = Image.open(image_file)
     final_image = np.array(image)
     # get bodies via the body detector
-    if detect:
-        detector = BodyDetector()
+    if detector:
         bodies = detector.body_detect_in_image(image_file)
     else:
         bodies = get_bodies_from_file(mask_files)
     logging.debug(f"Found {len(bodies)} bodies in image {Path(image_file).stem}")
     bodies = add_body_cutout_and_mask_img(bodies, final_image)
     for body in bodies:
-        body = anon_function(obj=body)
+        if "img" in inspect.signature(anon_function).parameters:
+            body = anon_function(obj=body, img=image)
+        else:
+            body = anon_function(obj=body)
+
         final_image = body.add_anon_body_to_image(final_image)
 
-    return Image.fromarray(final_image)
+    return Image.fromarray(final_image), bodies
