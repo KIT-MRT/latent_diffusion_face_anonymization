@@ -151,7 +151,7 @@ def fill_body_payload(init_img_b64, mask_b64, pose_img_b64):
             "controlnet": {
                 "args": [
                     {
-                        "input_image": pose_img_b64.decode("utf-8"),
+                        "image": pose_img_b64.decode("utf-8"),
                         "module": "openpose_full",
                         "model": "control_v11p_sd15_openpose [cab727d4]",
                     }
