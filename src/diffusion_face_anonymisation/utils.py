@@ -108,17 +108,17 @@ def add_inpainted_faces_to_orig_img(
 
 
 def encode_image_mask_to_b64(init_img: Image.Image, mask_img: Image.Image) -> tuple[bytes, bytes]:
-    init_img_bytes = BytesIO()
+    init_img_bytes = io.BytesIO()
     init_img.save(init_img_bytes, format="png")
     init_img_b64 = base64.b64encode(init_img_bytes.getvalue())
 
-    mask_bytes = BytesIO()
+    mask_bytes = io.BytesIO()
     mask_img.save(mask_bytes, format="png")
     mask_img_b64 = base64.b64encode(mask_bytes.getvalue())
     return init_img_b64, mask_img_b64
 
 
-def fill_png_payload(init_img_b64, mask_b64) -> dict:
+def fill_face_payload(init_img_b64, mask_b64) -> dict:
     return {
         "init_images": ["data:image/png;base64," + init_img_b64.decode("utf-8")],
         "mask": "data:image/png;base64," + mask_b64.decode("utf-8"),
@@ -128,6 +128,38 @@ def fill_png_payload(init_img_b64, mask_b64) -> dict:
         "cfg_scale": 1,
         "sampler": "k_euler_a",
     }
+
+
+def fill_body_payload(init_img_b64, mask_b64, pose_img_b64):
+    payload = {
+        "init_images": ["data:image/png;base64," + init_img_b64.decode("utf-8")],
+        "mask": "data:image/png;base64," + mask_b64.decode("utf-8"),
+        "resize_mode": 1,
+        "inpaint_full_res": True,
+        "inpaint_full_res_padding": 32,
+        "denoising_strength": 0.65,
+        "inpainting_fill": 1,
+        "cfg_scale": 7,
+        "width": 512,
+        "height": 768,
+        "steps": 40,
+        "sampler": "k_euler_a",
+        # "prompt": "RAW photo, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3",
+        "negative_prompt": "nude, naked, nsfw, ugly,(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime), text, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck",
+        "sd_model_checkpoint": "realisticVisionV40_v40VAE-inpainting.safetensors [82e14c46c6]",
+        "alwayson_scripts": {
+            "controlnet": {
+                "args": [
+                    {
+                        "input_image": pose_img_b64.decode("utf-8"),
+                        "module": "openpose_full",
+                        "model": "control_v11p_sd15_openpose [cab727d4]",
+                    }
+                ]
+            }
+        },
+    }
+    return payload
 
 
 def send_request_to_api(png_payload: dict):
