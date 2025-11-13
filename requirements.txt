@@ -4,3 +4,4 @@ pillow
 scikit-image
 pyyaml
 tqdm
+ultralytics
