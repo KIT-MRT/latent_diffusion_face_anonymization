@@ -11,7 +11,7 @@ from diffusion_face_anonymisation.body import Body
 import diffusion_face_anonymisation.utils as utils
 
 
-def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str, bool]:
+def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str, str, bool]:
     parser = argparse.ArgumentParser(
         prog="Face/Body Anonymization",
         description="Anonymize face/bodies.",
@@ -33,6 +33,7 @@ def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str, bool]:
         Path(args.mask_dir),
         Path(args.output_dir),
         args.anon_function,
+        args.image_extension,
         detect,
     )
 
@@ -42,7 +43,9 @@ def setup_face_detection_parser_and_parse_args() -> tuple[Path, Path]:
         prog="Face detection",
         description="Detects faces with Retina face and writes the bounding box coordinates to a json",
     )
-    parser.add_argument("--image_dir", required=True, type=str, help="Path to input directory")
+    parser.add_argument(
+        "--image_dir", required=True, type=str, help="Path to input directory"
+    )
     parser.add_argument(
         "--mask_dir", required=True, type=str, help="Path to masks (output) directory"
     )
@@ -54,7 +57,9 @@ def setup_face_detection_parser_and_parse_args() -> tuple[Path, Path]:
 def glob_files_by_extension(base_dir: str | Path, extension: str) -> list[Path]:
     files_list = []
     for root, _, files in os.walk(base_dir):
-        files_list.extend([Path(root, file) for file in files if file.endswith(extension)])
+        files_list.extend(
+            [Path(root, file) for file in files if file.endswith(extension)]
+        )
     return files_list
 
 
@@ -78,7 +83,9 @@ def get_bodies_from_file(img_dict: dict[str, str]) -> list[Body]:
     inst_image = utils.preprocess_image(img_dict["instance_ids_file"])
     if "label_ids_file" in img_dict:
         label_img = utils.preprocess_image(img_dict["label_ids_file"])
-        unique_person_pixel_list = utils.get_unique_person_pixel_as_list(inst_image, label_img)
+        unique_person_pixel_list = utils.get_unique_person_pixel_as_list(
+            inst_image, label_img
+        )
         bodies = utils.get_bodies_from_image(image, unique_person_pixel_list)
     else:
         bodies = []
@@ -93,4 +100,4 @@ def save_anon_image(anon_img, image_file: str, output_dir: Path, anon_function: 
     # Save the final image and debug image
     anon_img.save(output_dir / output_filename)
 
-    logging.info(f"Anonymized image saved to {output_dir/output_filename}")
+    logging.info(f"Anonymized image saved to {output_dir / output_filename}")
