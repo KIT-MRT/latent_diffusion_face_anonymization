@@ -20,7 +20,7 @@ RUN python3 -m pip install --pre git+https://github.com/crowsonkb/k-diffusion.gi
 
 COPY . /tool
 WORKDIR /tool
-RUN python3 -m pip install -r requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
 RUN python3 setup.py install
 
 WORKDIR /opt/gui
