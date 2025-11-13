@@ -23,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    image_dir, mask_dir, output_dir, anon_method, detect = setup_parser_and_parse_args()
+    image_dir, mask_dir, output_dir, anon_method, image_extension, detect = setup_parser_and_parse_args()
     detector = None
     # load detection model here if no mask dir is provided to avoid reloading of the model
     if detect:
@@ -40,12 +40,14 @@ if __name__ == "__main__":
         os.makedirs(debug_dir)
         logger.info(f"Debug directory created at {debug_dir}")
 
-    image_mask_dict = dfa_utils.get_image_mask_dict(str(image_dir), str(mask_dir), method="body")
+    image_mask_dict = dfa_utils.get_image_mask_dict(str(image_dir), str(mask_dir), method="body", image_file_extension=image_extension, detect=detect)
     if not detect:
         logger.info(f"Found {len(image_mask_dict)} images with corresponding masks.")
     logger.info("Starting to anonymize persons in images.")
 
+    print(f"Found {len(image_mask_dict)} images with corresponding masks.")
     for img_id, entry in tqdm(enumerate(image_mask_dict.values())):
+        print(entry)
         image_file = entry["image_file"]
         anon_img, bodies = anonymize_body_image(image_file, entry, anon_function, detector)
         for i, body in enumerate(bodies):

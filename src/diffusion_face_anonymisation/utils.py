@@ -21,10 +21,16 @@ def get_image_id(full_image_string: str) -> str:
         raise ValueError("No match found")
 
 
-def get_image_mask_dict(image_dir: str, mask_dir: str, method: str) -> dict:
+def get_image_mask_dict(
+    image_dir: str,
+    mask_dir: str,
+    method: str,
+    image_file_extension: str = "png",
+    detect: bool = True,
+) -> dict:
     image_mask_dict = {}
 
-    png_files = dfa_io.glob_files_by_extension(image_dir, "png")
+    png_files = dfa_io.glob_files_by_extension(image_dir, image_file_extension)
     image_mask_dict = add_file_paths_to_image_mask_dict(
         png_files, image_mask_dict, "image_file"
     )
@@ -50,11 +56,12 @@ def get_image_mask_dict(image_dir: str, mask_dir: str, method: str) -> dict:
         raise ValueError(f"Unknown method {method} for image mask dict creation")
 
     # clear image_mask_dict from entries which do not contain a mask
-    image_mask_dict = {
-        entry: image_mask_dict[entry]
-        for entry in image_mask_dict
-        if mask_key in image_mask_dict[entry]
-    }
+    if not detect:
+        image_mask_dict = {
+            entry: image_mask_dict[entry]
+            for entry in image_mask_dict
+            if mask_key in image_mask_dict[entry]
+        }
     return image_mask_dict
 
 
@@ -68,12 +75,15 @@ def convert_b64_to_pil(img_b64):
 
 
 def add_file_paths_to_image_mask_dict(
-    file_paths: list[Path], image_mask_dict: dict, file_key: str
+    file_paths: list[Path], image_mask_dict: dict, file_key: str, detect: bool = True
 ) -> dict:
     for file in file_paths:
         image_name = file.stem
-        image_id = get_image_id(image_name)
-        image_mask_dict.setdefault(image_id, {})[file_key] = file
+        if not detect:
+            image_id = get_image_id(image_name)
+            image_mask_dict.setdefault(image_id, {})[file_key] = file
+        else:
+            image_mask_dict.setdefault(image_name, {})[file_key] = file
     return image_mask_dict
 
 
