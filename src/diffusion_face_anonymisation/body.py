@@ -36,6 +36,13 @@ class Body:
         if self.body_anon:
             self.body_anon.save(f"{save_path}/body_anon_{img_id}_{body_id}.png")
 
+    def __str__(self):
+        return_string = "Body Object\n"
+        return_string += f" - Body cutout size: {self.body_cutout.size}\n"
+        return_string += f" - Body mask size: {self.body_mask_image.size}\n"
+        return_string += f" - Body mask content sum: {np.sum(self.body_mask)}\n"
+        return return_string
+
 
 def add_body_cutout_and_mask_img(bodies: list[Body], image: np.ndarray) -> list[Body]:
     for body in bodies:

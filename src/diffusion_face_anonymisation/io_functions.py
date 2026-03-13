@@ -24,7 +24,7 @@ def setup_parser_and_parse_args() -> tuple[Path, Path, Path, str, str, bool]:
         "--anon_function",
         type=str,
         required=True,
-        choices=["white", "gauss", "pixel", "lda"],
+        choices=["white", "gauss", "pixel", "lda", "all"],
     )
     detect = "--mask_dir" not in sys.argv
     args = parser.parse_args()

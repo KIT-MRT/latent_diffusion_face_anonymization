@@ -28,26 +28,29 @@ def anonymize_white(*, obj) -> object:
     if isinstance(obj, Face):
         obj.face_anon = Image.fromarray(np.ones_like(np.array(obj.face_cutout)) * 255)
     elif isinstance(obj, Body):
-        obj.body_anon = obj.body_mask
+        obj.body_anon = Image.fromarray(obj.body_mask)
     return obj
 
 
 def anonymize_gauss(*, obj) -> object:
     if isinstance(obj, Face):
-        obj.face_anon = gaussian(
-            np.array(obj.face_cutout, dtype=np.uint8),
-            preserve_range=True,
-            sigma=3,
-            channel_axis=-1,  # type: ignore
+        obj.face_anon = Image.fromarray(
+            gaussian(
+                np.array(obj.face_cutout, dtype=np.uint8),
+                preserve_range=True,
+                sigma=3,
+                channel_axis=-1,  # type: ignore
+            ).astype(np.uint8)
         )
     elif isinstance(obj, Body):
-        obj.body_anon = gaussian(
+        res = gaussian(
             np.array(obj.body_cutout, dtype=np.uint8),
             preserve_range=True,
             sigma=3,
             channel_axis=-1,  # type: ignore
-        )
-    return obj
+        ).astype(np.uint8)
+        obj.body_anon = Image.fromarray(res)
+        return obj
 
 
 def anonymize_pixelize(*, obj, pixels_per_block=8) -> object:
@@ -62,7 +65,9 @@ def anonymize_pixelize(*, obj, pixels_per_block=8) -> object:
                 idx_v * pixels_per_block : (idx_v + 1) * pixels_per_block,
                 idx_u * pixels_per_block : (idx_u + 1) * pixels_per_block,
             ]
-            mean = np.mean(np.reshape(block, [pixels_per_block * pixels_per_block, 3]), axis=0)
+            mean = np.mean(
+                np.reshape(block, [pixels_per_block * pixels_per_block, 3]), axis=0
+            )
             obj_img[
                 idx_v * pixels_per_block : (idx_v + 1) * pixels_per_block,
                 idx_u * pixels_per_block : (idx_u + 1) * pixels_per_block,
@@ -92,7 +97,9 @@ def anonymize_face_with_lda(*, face: Face, img: Image.Image) -> Face:
 
     inpainted_img = utils.convert_b64_to_pil(inpainted_img_b64)
     inpainted_img_np = np.array(inpainted_img)
-    face.face_anon = Image.fromarray(inpainted_img_np[face.bounding_box.get_slice_area()])
+    face.face_anon = Image.fromarray(
+        inpainted_img_np[face.bounding_box.get_slice_area()]
+    )
 
     return face
 
@@ -109,7 +116,9 @@ def anonymize_body_with_lda(*, body: Body, img: Image.Image) -> Body:
     return body
 
 
-def anonymize_face_image(image_file: Path, mask_file: Path, anon_function: Callable) -> Image.Image:
+def anonymize_face_image(
+    image_file: Path, mask_file: Path, anon_function: Callable
+) -> Image.Image:
     image = Image.open(image_file)
     final_image = np.array(image)
     faces = get_faces_from_file(mask_file)
@@ -142,6 +151,7 @@ def anonymize_body_image(
     logging.debug(f"Found {len(bodies)} bodies in image {Path(image_file).stem}")
     bodies = add_body_cutout_and_mask_img(bodies, final_image)
     for body in bodies:
+        logging.debug(f"Anonymizing body with the following values: {body}")
         if "img" in inspect.signature(anon_function).parameters:
             body = anon_function(obj=body, img=image)
         else:
