@@ -1,64 +1,85 @@
-FROM pytorch/pytorch:2.1.2-cuda11.8-cudnn8-runtime
+FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
 
-# Create a folder with enough space for pip temporary files
-RUN mkdir -p /bigtmp
-ENV TMPDIR=/bigtmp
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
 
-# Install system packages and required libraries
+# Split apt-get to avoid OOM
+RUN apt-get update && apt-get install -y --no-install-recommends wget git curl \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y wget git curl git-lfs
-RUN apt-get install -y build-essential python3 python3-pip ffmpeg
-RUN apt-get install -y libsm6 libxext6 libxrender1 libglib2.0-0 libsndfile1 libgl1 libgl1-mesa-glx && rm -rf /var/lib/apt/lists/*
-# Debug: show disk usage
-RUN df -h && du -sh /tmp /var/tmp /bigtmp
+RUN apt-get update && apt-get install -y --no-install-recommends git-lfs ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-# Clone Stable Diffusion WebUI
-RUN git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git /opt/gui
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsm6 libxext6 libxrender1 libglib2.0-0 libsndfile1 libgl1-mesa-glx \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+
 WORKDIR /opt/gui
-RUN git checkout tags/v1.8.0
 
-# Upgrade pip
-RUN python3 -m pip install --upgrade pip setuptools wheel
+# Clone SD WebUI Forge (no longer depends on unavailable Stability-AI repos)
+RUN git clone --depth 1 https://github.com/lllyasviel/stable-diffusion-webui-forge.git .
 
-# Install PyTorch and related packages
-RUN python3 -m pip install -vvv --no-cache-dir \
-    torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 \
-    --index-url https://download.pytorch.org/whl/cu118
+# Clone required repositories (Forge only needs these)
+RUN mkdir -p repositories && \
+    git clone --depth 1 https://github.com/AUTOMATIC1111/stable-diffusion-webui-assets.git repositories/stable-diffusion-webui-assets && \
+    git clone --depth 1 https://github.com/lllyasviel/huggingface_guess.git repositories/huggingface_guess && \
+    git clone --depth 1 https://github.com/salesforce/BLIP.git repositories/BLIP
 
-# Install xformers and versioned requirements
-RUN python3 -m pip install --no-cache-dir xformers==v0.0.23.post1 --index-url https://download.pytorch.org/whl/cu118
-RUN python3 -m pip install --no-cache-dir -r requirements_versions.txt
+# Create model directories
+RUN mkdir -p models/Stable-diffusion models/Lora models/VAE embeddings
 
-# Clone extra repositories and models
-RUN git clone https://github.com/Stability-AI/stablediffusion repositories/stable-diffusion-stability-ai
-RUN git clone https://github.com/Stability-AI/generative-models.git repositories/generative-models
-RUN git clone https://github.com/Mikubill/sd-webui-controlnet extensions/sd-webui-controlnet
-RUN git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-assets.git repositories/stable-diffusion-webui-assets
+# Install Forge's requirements - use their requirements_versions.txt
+# First install typing_extensions to avoid import errors
+RUN uv pip install --system "typing_extensions>=4.10"
 
-# Download models (Stable Diffusion + LoRA + ControlNet)
-RUN mkdir -p models/Stable-diffusion && cd models/Stable-diffusion && \
-    wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors && \
-    wget https://civitai.com/api/download/models/114600 --content-disposition && \
-    wget https://civitai.com/api/download/models/245598 --content-disposition
+# Install xformers for GPU acceleration (optional, may fail on some systems)
+RUN uv pip install --system xformers==0.0.27 || true
 
-RUN mkdir -p models/Lora && cd models/Lora && \
-    wget https://civitai.com/api/download/models/62833 --content-disposition
+# Install requirements from Forge's requirements file
+RUN uv pip install --system -r requirements_versions.txt
 
-RUN mkdir -p extensions/sd-webui-controlnet/models && cd extensions/sd-webui-controlnet/models && \
-    wget https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth && \
-    wget https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11f1p_sd15_depth.pth && \
-    wget https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth
+# Download SD 1.5 model from HuggingFace using curl (more memory efficient)
+RUN cd models/Stable-diffusion && \
+    curl -L --progress-bar -o v1-5-pruned-emaonly.safetensors \
+    "https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors" && \
+    ls -lh v1-5-pruned-emaonly.safetensors
 
-# Install k-diffusion pre-release
-RUN python3 -m pip install --pre git+https://github.com/crowsonkb/k-diffusion.git --prefer-binary \
-    --extra-index-url https://download.pytorch.org/whl/nightly/cu118
+# Download ControlNet models one at a time
+RUN mkdir -p models/ControlNet && cd models/ControlNet && \
+    curl -L --progress-bar -o control_v11p_sd15_canny.pth \
+    "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth" && \
+    ls -lh control_v11p_sd15_canny.pth
 
-# Copy your tool and install
+RUN cd models/ControlNet && \
+    curl -L --progress-bar -o control_v11f1p_sd15_depth.pth \
+    "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11f1p_sd15_depth.pth" && \
+    ls -lh control_v11f1p_sd15_depth.pth
+
+RUN cd models/ControlNet && \
+    curl -L --progress-bar -o control_v11p_sd15_openpose.pth \
+    "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth" && \
+    ls -lh control_v11p_sd15_openpose.pth
+# Install CLIP
+RUN uv pip install --system git+https://github.com/openai/CLIP.git
+
+# Pre-install bitsandbytes and joblib (Forge installs these at runtime otherwise)
+RUN uv pip install --system bitsandbytes==0.45.3 joblib
+
+# Tool dependencies (install after Forge requirements to avoid conflicts)
+RUN uv pip install --system pillow scikit-image pyyaml tqdm
+RUN uv pip install --system retina-face gdown
+RUN uv pip install --system ultralytics
+
+# Copy and install the tool
 COPY . /tool
 WORKDIR /tool
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
-RUN python3 setup.py install
+RUN uv pip install --system -e .
 
-# Final workdir and entrypoint
 WORKDIR /opt/gui
-ENTRYPOINT ["python3", "webui.py", "--listen", "--api", "--xformers"]
+EXPOSE 7860
+
+ENTRYPOINT ["python3", "webui.py", "--listen", "--api", "--skip-torch-cuda-test"]

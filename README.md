@@ -16,14 +16,45 @@
 # Latent Diffusion Face Anonymisation LDFA
 This repository contains the code for the paper LDFA: Latent Diffusion Face Anonymization for Self-driving Applications.
 
+## Quick Start (Recommended)
+
+Use the new unified `anonymize.py` script for all anonymization tasks:
+
+```bash
+# Anonymize bodies and license plates with SAM3 (default, high accuracy)
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets body lp --method pixel
+
+# Anonymize everything (face, body, license plates)
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets face body lp --mask_dir /data/masks --method lda
+
+# Use all anonymization methods
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets body --method all
+
+# Use old YOLO/YOLOX detectors instead of SAM3
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets body lp --detector yolo --method pixel
+```
+
+For more options: `python scripts/anonymize.py --help`
+
 ## Structure
 ### Dockerfile
 The dockerfile is used to start container which runs the [Automatic1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) web UI for stable diffusion. LDFA uses the API to conveniently use a stable diffusion model for the anonymization of human faces.
 
 ### Scripts
-`detect_faces.py` - This script uses [RetinaFace](https://github.com/serengil/retinaface) to detect faces on a given dataset.  
-`face_anonymization.py` - This script implements different functions for face anonymization.  
-`body_anonymization.py` - This script implements different functions for body anonymization. 
+**Main Script (Recommended):**
+- `anonymize.py` - Unified anonymization for faces, bodies, and license plates with SAM3 or YOLO detectors
+
+**Legacy Scripts** (in `scripts/legacy/`):
+- `detect_faces.py` - Uses [RetinaFace](https://github.com/serengil/retinaface) to detect faces
+- `face_anonymization.py` - Face anonymization (use `anonymize.py --targets face` instead)
+- `body_anonymization.py` - Body anonymization with YOLO (use `anonymize.py --targets body --detector yolo` instead)
+- `license_plate_anonymization.py` - LP anonymization with YOLOX (use `anonymize.py --targets lp --detector yolo` instead)
+
+See `scripts/legacy/README.md` for migration guide.
 
 ### Test
 The tests are not meant to be used as a unit test, but to show a quick script usage of our tooling. The tests are run on some samples from the [cityscapes](https://www.cityscapes-dataset.com/) dataset.
@@ -48,28 +79,65 @@ Then you can run the docker container with
 docker run -p 7860:7860 ldfa 
 ```
 
-### Face Anonymization
-Once the docker container is running you can generate masks using:  
-```shell
-python3 detect_faces.py --image_dir=/data/images --mask_dir=/data/masks
-```
+### Unified Anonymization (Recommended)
 
-and anonymize the detected faces using:
+The new `anonymize.py` script provides a unified interface for all anonymization tasks with SAM3 or YOLO detectors:
 
 ```shell
-python3 face_anonymization.py --image_dir=/data/images --mask_dir=/data/masks --output_dir=/data/anonymized --anon_function lda
+# Body and license plate anonymization with SAM3 (default, high accuracy)
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets body lp --method pixel
+
+# Face anonymization with LDA (requires docker container running)
+# First, generate masks:
+python scripts/detect_faces.py --image_dir /data/images --mask_dir /data/masks
+
+# Then anonymize:
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets face --mask_dir /data/masks --method lda
+
+# Different methods per target
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets body lp --body_method gauss --lp_method white
+
+# Process with all methods (white, gauss, pixel, lda)
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets body --method all
+
+# Resume interrupted processing
+python scripts/anonymize.py --image_dir /data/images --output_dir /data/output \
+    --targets body lp --method pixel --resume
 ```
 
-You can also use the other anonymization functions implemented. See `python3 face_anonymization.py --help` for more functions.
+**Available Detectors:**
+- **SAM3** (default): Segment Anything 3 - higher accuracy (100% LP recall vs 35% for YOLOX)
+- **YOLO/YOLOX**: Original detectors - use with `--detector yolo`
 
-### Body Anonymization
-The body anonymization works similar to the face anonymization. You can use the `body_anonymization.py` script to anonymize the bodies.  
+**Available Methods:**
+- `white` - White fill
+- `gauss` - Gaussian blur
+- `pixel` - Pixelization
+- `lda` - Latent Diffusion Anonymization (requires stable diffusion API)
+
+For more options: `python scripts/anonymize.py --help`
+
+### Legacy Scripts
+
+For backward compatibility, legacy scripts are available in `scripts/legacy/`:
+
+**Face Anonymization (Legacy):**
 ```shell
-python3 body_anonymization.py --image_dir=/data/images --output_dir=/data/anonymized --anon_function lda
+python scripts/legacy/face_anonymization.py --image_dir=/data/images --mask_dir=/data/masks \
+    --output_dir=/data/anonymized --anon_function lda
 ```
-This script uses [YoloV8](https://docs.ultralytics.com/models/yolov8/) to generate the masks for the persons to be anonymized.
 
-You can also use the other anonymization functions implemented. See `python3 body_anonymization.py --help` for more functions.
+**Body Anonymization (Legacy):**
+```shell
+python scripts/legacy/body_anonymization.py --image_dir=/data/images \
+    --output_dir=/data/anonymized --anon_function lda
+```
+
+See `scripts/legacy/README.md` for migration guide and more examples.
 
 # Citation
 

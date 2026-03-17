@@ -5,6 +5,7 @@ import yaml
 import argparse
 import logging
 import json
+import numpy as np
 
 from diffusion_face_anonymisation.face import Face
 from diffusion_face_anonymisation.body import Body
@@ -101,3 +102,38 @@ def save_anon_image(anon_img, image_file: str, output_dir: Path, anon_function: 
     anon_img.save(output_dir / output_filename)
 
     logging.info(f"Anonymized image saved to {output_dir / output_filename}")
+
+
+def get_license_plates_from_file(lp_file_path: Path):
+    """Load pre-detected license plates from JSON file.
+    
+    Args:
+        lp_file_path: Path to JSON file with license plate detections
+        
+    Returns:
+        List of LicensePlate objects
+    """
+    from diffusion_face_anonymisation.license_plate import LicensePlate
+    
+    with open(lp_file_path, "r") as f:
+        lp_dict = json.load(f)
+    
+    license_plates = []
+    for lp in lp_dict.get("license_plates", []):
+        license_plates.append(LicensePlate(lp["obb"]))
+    return license_plates
+
+
+def add_lp_cutout_and_mask_img(license_plates, image: np.ndarray):
+    """Extract license plate regions from image (if loaded from file instead of detection).
+    
+    Args:
+        license_plates: List of LicensePlate objects
+        image: Input image as numpy array
+        
+    Returns:
+        List of LicensePlate objects with cutouts set
+    """
+    for lp in license_plates:
+        lp.set_lp_cutout(image)
+    return license_plates
