@@ -54,6 +54,8 @@ class AnonymizationClient:
         image.save(buf, format="PNG")
         buf.seek(0)
         files = {"image": ("image.png", buf, "image/png")}
+        # FastAPI's bool form parser is strict about truthy strings — send
+        # lowercase to avoid surprises.
         data = {
             "targets": ",".join(targets),
             "body_method": body_method,
@@ -61,8 +63,8 @@ class AnonymizationClient:
             "detector": detector,
             "body_threshold": body_threshold,
             "lp_threshold": lp_threshold,
-            "return_masks": False,
-            "return_original": True,
+            "return_masks": "true",
+            "return_original": "true",
         }
         r = self.session.post(
             f"{self.server_url}/api/anonymize",
@@ -71,6 +73,13 @@ class AnonymizationClient:
             timeout=self.timeout,
         )
         result = r.json()
+        logger.info(
+            "server response: success=%s, has_anon=%s, has_orig=%s, det_keys=%s",
+            result.get("success"),
+            bool(result.get("anonymized_image")),
+            bool(result.get("original_image")),
+            list((result.get("detections") or {}).keys()),
+        )
         if not result.get("success", False):
             return {"success": False, "error": result.get("error", "Unknown error")}
 
@@ -141,12 +150,20 @@ def run_anonymize(
     if not result["success"]:
         return gr.update(), f"❌ {result['error']}"
 
+    orig_img = result.get("original_image") or image
+    anon_img = result.get("anonymized_image")
+    if anon_img is None:
+        return gr.update(), "❌ Server returned no anonymized image"
+
     dets = result.get("detections") or {}
     counts = ", ".join(f"{k}:{len(v)}" for k, v in dets.items() if v) or "no detections"
-    status = (
-        f"✅ {counts} · {result['processing_time_ms'] / 1000:.2f}s"
+    status = f"✅ {counts} · {result['processing_time_ms'] / 1000:.2f}s"
+    logger.info(
+        "slider inputs: orig=%s anon=%s",
+        f"{orig_img.size} {orig_img.mode}" if orig_img else None,
+        f"{anon_img.size} {anon_img.mode}" if anon_img else None,
     )
-    return (result["original_image"], result["anonymized_image"]), status
+    return (orig_img, anon_img), status
 
 
 def create_app(server_url: str):
