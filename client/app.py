@@ -271,9 +271,24 @@ def create_app(server_url: str):
 
 def main():
     parser = argparse.ArgumentParser(description="LDFA Anonymization Demo Client")
-    parser.add_argument("--server-url", default="http://localhost:8000")
-    parser.add_argument("--port", type=int, default=7860)
-    parser.add_argument("--share", action="store_true")
+    parser.add_argument(
+        "--server-url",
+        type=str,
+        default="http://mps-lagarita.fzi.de:8000",
+        help="URL of the anonymization API server",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=7860,
+        help="Port to run Gradio app on",
+    )
+    parser.add_argument(
+        "--share",
+        action="store_true",
+        help="Create public share link",
+    )
+    
     args = parser.parse_args()
 
     logger.info(f"Connecting to server: {args.server_url}")
