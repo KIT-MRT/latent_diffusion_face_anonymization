@@ -155,15 +155,15 @@ def run_anonymize(
     if anon_img is None:
         return gr.update(), "❌ Server returned no anonymized image"
 
+    # ImageSlider renders reliably with numpy arrays in RGB.
+    orig_np = np.array(orig_img.convert("RGB"))
+    anon_np = np.array(anon_img.convert("RGB"))
+
     dets = result.get("detections") or {}
     counts = ", ".join(f"{k}:{len(v)}" for k, v in dets.items() if v) or "no detections"
     status = f"✅ {counts} · {result['processing_time_ms'] / 1000:.2f}s"
-    logger.info(
-        "slider inputs: orig=%s anon=%s",
-        f"{orig_img.size} {orig_img.mode}" if orig_img else None,
-        f"{anon_img.size} {anon_img.mode}" if anon_img else None,
-    )
-    return (orig_img, anon_img), status
+    logger.info("slider inputs: orig=%s anon=%s", orig_np.shape, anon_np.shape)
+    return [orig_np, anon_np], status
 
 
 def create_app(server_url: str):
@@ -236,7 +236,7 @@ def create_app(server_url: str):
                 gr.Markdown("### 🎯 Result — drag the divider to compare")
                 comparison = ImageSlider(
                     label="← Original    Anonymized →",
-                    type="pil",
+                    type="numpy",
                     height=620,
                 )
                 status_text = gr.Textbox(label="Status", interactive=False)
