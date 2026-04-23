@@ -30,7 +30,9 @@ def anonymize_white(*, obj) -> object:
     if isinstance(obj, Face):
         obj.face_anon = Image.fromarray(np.ones_like(np.array(obj.face_cutout)) * 255)
     elif isinstance(obj, Body):
-        obj.body_anon = Image.fromarray(obj.body_mask)
+        # Get the cutout region and make it white
+        cutout = np.array(obj.body_cutout)
+        obj.body_anon = Image.fromarray(np.ones_like(cutout) * 255)
     elif isinstance(obj, LicensePlate):
         obj.lp_anon = Image.fromarray(np.ones_like(np.array(obj.lp_cutout)) * 255)
     return obj
@@ -141,6 +143,93 @@ def anonymize_body_with_lda(*, body: Body, img: Image.Image) -> Body:
     inpainted_img = utils.convert_b64_to_pil(inpainted_img_b64)
     inpainted_img_np = np.array(inpainted_img)
     body.body_anon = Image.fromarray(inpainted_img_np)
+    return body
+
+
+# ============================================================================
+# Multi-GPU Anonymization Functions
+# ============================================================================
+
+def anonymize_face_with_lda_multigpu(
+    *,
+    face: Face,
+    img: Image.Image,
+    endpoint_pool,
+    image_file: str = "unknown",
+    face_index: int = 0
+) -> Face:
+    """
+    Anonymize face using LDA with multi-GPU support.
+    
+    Args:
+        face: Face object with cutout and mask
+        img: Mask image for face inpainting
+        endpoint_pool: APIEndpointPool for load balancing
+        image_file: Source image file (for tracking)
+        face_index: Index of face in image (for tracking)
+        
+    Returns:
+        Face object with anonymized result in face.face_anon
+    """
+    init_img_b64 = utils.encode_image_to_b64(img)
+    mask_b64 = utils.encode_image_to_b64(face.mask_image)
+    png_payload = utils.fill_face_payload(init_img_b64, mask_b64)
+    
+    # Send to endpoint pool (automatically load-balanced)
+    inpainted_img_b64 = endpoint_pool.send_request(
+        png_payload,
+        image_file=image_file,
+        object_type='face',
+        object_index=face_index
+    )
+    
+    inpainted_img = utils.convert_b64_to_pil(inpainted_img_b64)
+    inpainted_img_np = np.array(inpainted_img)
+    face.face_anon = Image.fromarray(
+        inpainted_img_np[face.bounding_box.get_slice_area()]
+    )
+    
+    return face
+
+
+def anonymize_body_with_lda_multigpu(
+    *,
+    body: Body,
+    img: Image.Image,
+    endpoint_pool,
+    image_file: str = "unknown",
+    body_index: int = 0
+) -> Body:
+    """
+    Anonymize body using LDA with multi-GPU support.
+    
+    Args:
+        body: Body object with cutout and mask
+        img: Full image for body inpainting
+        endpoint_pool: APIEndpointPool for load balancing
+        image_file: Source image file (for tracking)
+        body_index: Index of body in image (for tracking)
+        
+    Returns:
+        Body object with anonymized result in body.body_anon
+    """
+    init_img_b64 = utils.encode_image_to_b64(img)
+    mask_b64 = utils.encode_image_to_b64(body.body_mask_image)
+    pose_img_b64 = utils.encode_image_to_b64(body.body_cutout)
+    png_payload = utils.fill_body_payload(init_img_b64, mask_b64, pose_img_b64)
+    
+    # Send to endpoint pool (automatically load-balanced)
+    inpainted_img_b64 = endpoint_pool.send_request(
+        png_payload,
+        image_file=image_file,
+        object_type='body',
+        object_index=body_index
+    )
+    
+    inpainted_img = utils.convert_b64_to_pil(inpainted_img_b64)
+    inpainted_img_np = np.array(inpainted_img)
+    body.body_anon = Image.fromarray(inpainted_img_np)
+    
     return body
 
 
@@ -256,6 +345,7 @@ def anonymize_combined_body_and_lp(
     license_plates: list[LicensePlate],
     body_anon_function: Callable,
     lp_anon_function: Callable,
+    endpoint_pool=None,
 ) -> tuple[Image.Image, list[Body], list[LicensePlate]]:
     """Anonymize both bodies and license plates in same image.
     
@@ -267,6 +357,7 @@ def anonymize_combined_body_and_lp(
         license_plates: Pre-detected LicensePlate objects
         body_anon_function: Anonymization function for bodies
         lp_anon_function: Anonymization function for license plates
+        endpoint_pool: Optional APIEndpointPool for multi-GPU LDA
         
     Returns:
         Tuple of (anonymized_image, bodies, license_plates)
@@ -276,8 +367,22 @@ def anonymize_combined_body_and_lp(
     
     # Anonymize bodies first
     bodies = add_body_cutout_and_mask_img(bodies, final_image)
-    for body in bodies:
-        if "img" in inspect.signature(body_anon_function).parameters:
+    
+    # Check if we should use multi-GPU LDA
+    body_func_name = getattr(body_anon_function, '__name__', '')
+    use_multigpu = endpoint_pool is not None and body_func_name == 'anonymize_lda'
+    
+    for idx, body in enumerate(bodies):
+        if use_multigpu:
+            # Use multi-GPU LDA
+            body = anonymize_body_with_lda_multigpu(
+                body=body, 
+                img=image,
+                endpoint_pool=endpoint_pool,
+                image_file=str(image_file),
+                body_index=idx
+            )
+        elif "img" in inspect.signature(body_anon_function).parameters:
             body = body_anon_function(obj=body, img=image)
         else:
             body = body_anon_function(obj=body)

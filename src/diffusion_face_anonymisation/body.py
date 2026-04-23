@@ -26,7 +26,21 @@ class Body:
     def add_anon_body_to_image(self, image: np.ndarray) -> np.ndarray:
         body_anon_np = np.array(self.body_anon)
         body_mask_np = np.array(self.body_mask)
-        image[body_mask_np == 255] = body_anon_np[body_mask_np == 255]
+        
+        # Handle grayscale masks (from SAM3) vs RGB masks (from YOLO)
+        if len(body_mask_np.shape) == 3:
+            body_mask_np = body_mask_np[:, :, 0]  # Convert RGB to grayscale
+        
+        # Ensure binary mask
+        body_mask_np = (body_mask_np > 127).astype(np.uint8)
+        
+        # Apply anonymization - mask indices need to match
+        if body_anon_np.shape[:2] != body_mask_np.shape:
+            # Resize anon to match mask if needed
+            h, w = body_mask_np.shape
+            body_anon_np = np.array(Image.fromarray(body_anon_np).resize((w, h)))
+        
+        image[body_mask_np == 1] = body_anon_np[body_mask_np == 1]
         return image
 
     def save(self, save_path: Path, img_id: int, body_id: int):
