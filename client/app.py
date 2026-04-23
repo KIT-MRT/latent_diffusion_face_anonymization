@@ -20,7 +20,6 @@ import gradio as gr
 import numpy as np
 import requests
 from PIL import Image
-from gradio_imageslider import ImageSlider
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -101,6 +100,41 @@ class AnonymizationClient:
         return Image.open(io.BytesIO(base64.b64decode(data_url)))
 
 
+def _img_to_data_url(img: Image.Image) -> str:
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, format="JPEG", quality=88)
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
+# Loaded once on page render; the custom element handles the drag.
+_SLIDER_SCRIPT = (
+    '<script type="module" '
+    'src="https://unpkg.com/img-comparison-slider@8/dist/index.js"></script>'
+)
+
+_SLIDER_PLACEHOLDER = (
+    _SLIDER_SCRIPT
+    + '<div style="color:#888;padding:1.5em;text-align:center;">'
+    '(Capture a frame and click Anonymize — the reveal slider appears here.)'
+    "</div>"
+)
+
+
+def slider_html(orig: Image.Image, anon: Image.Image) -> str:
+    left = _img_to_data_url(orig)
+    right = _img_to_data_url(anon)
+    return f"""
+{_SLIDER_SCRIPT}
+<img-comparison-slider style="--divider-width:2px;--divider-color:#fff;width:100%;">
+  <img slot="first"  src="{left}"  style="width:100%;display:block;" />
+  <img slot="second" src="{right}" style="width:100%;display:block;" />
+</img-comparison-slider>
+<div style="font-size:0.85em;color:#888;margin-top:0.4em;">
+  Drag the divider — left = original, right = anonymized.
+</div>
+"""
+
+
 client: Optional[AnonymizationClient] = None
 
 
@@ -155,15 +189,11 @@ def run_anonymize(
     if anon_img is None:
         return gr.update(), "❌ Server returned no anonymized image"
 
-    # ImageSlider renders reliably with numpy arrays in RGB.
-    orig_np = np.array(orig_img.convert("RGB"))
-    anon_np = np.array(anon_img.convert("RGB"))
-
     dets = result.get("detections") or {}
     counts = ", ".join(f"{k}:{len(v)}" for k, v in dets.items() if v) or "no detections"
     status = f"✅ {counts} · {result['processing_time_ms'] / 1000:.2f}s"
-    logger.info("slider inputs: orig=%s anon=%s", orig_np.shape, anon_np.shape)
-    return [orig_np, anon_np], status
+    logger.info("slider inputs: orig=%s anon=%s", orig_img.size, anon_img.size)
+    return slider_html(orig_img, anon_img), status
 
 
 def create_app(server_url: str):
@@ -234,11 +264,7 @@ def create_app(server_url: str):
             # ─── Right: before/after slider ─────────────────────────────
             with gr.Column(scale=2):
                 gr.Markdown("### 🎯 Result — drag the divider to compare")
-                comparison = ImageSlider(
-                    label="← Original    Anonymized →",
-                    type="numpy",
-                    height=620,
-                )
+                comparison = gr.HTML(value=_SLIDER_PLACEHOLDER)
                 status_text = gr.Textbox(label="Status", interactive=False)
 
         # Wiring
