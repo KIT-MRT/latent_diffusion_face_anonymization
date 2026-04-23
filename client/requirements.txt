@@ -1,5 +1,6 @@
 # Gradio Client Application
 gradio>=4.15.0
+gradio_imageslider>=0.0.20
 requests>=2.31.0
 pillow>=10.0.0
 numpy>=1.24.0
