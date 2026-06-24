@@ -83,7 +83,7 @@ def anonymize_pixelize(*, obj, pixels_per_block=8) -> object:
 
 def anonymize_lda(*, obj, img: Image.Image) -> object:
     if isinstance(obj, Face):
-        obj = anonymize_face_with_lda(face=obj, img=obj.mask_image)
+        obj = anonymize_face_with_lda(face=obj, img=img)
     elif isinstance(obj, Body):
         obj = anonymize_body_with_lda(body=obj, img=img)
     return obj

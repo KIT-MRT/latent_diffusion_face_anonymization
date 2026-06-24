@@ -21,7 +21,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    image_dir, mask_dir, output_dir, anon_method = setup_parser_and_parse_args()
+    image_dir, mask_dir, output_dir, anon_method, image_extension, detect = (
+        setup_parser_and_parse_args()
+    )
     anon_function = define_anon_function(anon_method)
     assert anon_function is not None
 
