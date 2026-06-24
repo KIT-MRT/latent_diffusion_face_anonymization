@@ -13,10 +13,6 @@ import torch
 # Add YOLOX to path if installed from source
 sys.path.insert(0, "/tmp/YOLOX")
 
-from yolox.exp import get_exp
-from yolox.data.data_augment import preproc
-from yolox.utils import postprocess
-
 from diffusion_face_anonymisation.license_plate import LicensePlate
 
 # Default weights path
@@ -30,8 +26,10 @@ class LicensePlateDetector:
     confidence (0.15) and larger input size (800) for better recall.
     """
 
-    def __init__(self, weights_path: str = None, conf_threshold: float = 0.15, 
+    def __init__(self, weights_path: str = None, conf_threshold: float = 0.15,
                  input_size: int = 800):
+        from yolox.exp import get_exp
+
         self.conf_threshold = conf_threshold
         self.nms_threshold = 0.45
         self.test_size = (input_size, input_size)
@@ -54,6 +52,9 @@ class LicensePlateDetector:
 
     def detect(self, img_path: Path) -> list[LicensePlate]:
         """Detect license plates in image. Returns list of LicensePlate objects."""
+        from yolox.data.data_augment import preproc
+        from yolox.utils import postprocess
+
         img = cv2.imread(str(img_path))
         if img is None:
             return []

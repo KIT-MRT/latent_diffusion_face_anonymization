@@ -1,0 +1,59 @@
+# Server Configuration
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+  workers: 4
+
+# Detector Configuration
+detectors:
+  default: "sam3"  # sam3 or yolo
+  sam3:
+    body_threshold: 0.5
+    mask_threshold: 0.5
+    lp_threshold: 0.5
+  yolo:
+    body_batch_size: 8
+    lp_conf_threshold: 0.25
+
+# Anonymization Methods
+methods:
+  default_body: "pixel"
+  default_lp: "pixel"
+  default_face: "pixel"
+  available: ["white", "gauss", "pixel", "lda"]
+
+# Multi-GPU Configuration
+gpu:
+  enabled: true
+  count: 1
+  base_port: 7860
+  api_timeout: 120
+
+# Content Filter Configuration
+content_filter:
+  enabled: false  # Disabled by default (requires external API integration)
+  nsfw_threshold: 0.7
+  gore_threshold: 0.6
+  log_flagged: true
+  log_dir: "/tmp/anonymization/flagged"
+  save_images: true
+  # To enable content filtering, integrate with:
+  # - AWS Rekognition
+  # - Azure Content Moderator  
+  # - Google Cloud Vision API
+  # Or implement your own NSFW detection model
+
+# API Configuration
+api:
+  max_image_size_mb: 10
+  allowed_extensions: ["jpg", "jpeg", "png", "webp"]
+  timeout_seconds: 120
+  cors_origins: ["*"]
+
+# Logging
+logging:
+  level: "INFO"
+  format: "{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
+  file: "/tmp/anonymization/server.log"

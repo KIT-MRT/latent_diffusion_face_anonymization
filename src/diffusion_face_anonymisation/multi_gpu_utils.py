@@ -132,22 +132,34 @@ class APIEndpointPool:
         gpu_count: int,
         timeout: int = 120,
         retry_attempts: int = 3,
-        track_requests: bool = True
+        track_requests: bool = True,
+        host_template: str = "127.0.0.1",
+        port_override: int | None = None,
     ):
         """
         Initialize endpoint pool.
-        
+
         Args:
-            base_port: Starting port (e.g., 7860)
+            base_port: Starting port (e.g., 7860). Used to derive per-GPU
+                ports when ``port_override`` is not set.
             gpu_count: Number of GPUs/endpoints
             timeout: Request timeout in seconds
             retry_attempts: Max retry attempts per request
             track_requests: Enable detailed request tracking
+            host_template: Hostname per endpoint. ``{gpu}`` is replaced by
+                the GPU index (e.g. ``"sd-api-gpu{gpu}"`` inside compose).
+                Default ``"127.0.0.1"`` matches a host-network layout where
+                each GPU exposes a distinct port.
+            port_override: If set, every endpoint uses this port (compose
+                layout — all SD containers bind 7860 internally). Otherwise
+                each endpoint uses ``base_port + i``.
         """
-        self.endpoints = [
-            f"http://127.0.0.1:{base_port + i}/sdapi/v1/img2img"
-            for i in range(gpu_count)
-        ]
+        def _endpoint(i: int) -> str:
+            host = host_template.format(gpu=i) if "{gpu}" in host_template else host_template
+            port = port_override if port_override is not None else base_port + i
+            return f"http://{host}:{port}/sdapi/v1/img2img"
+
+        self.endpoints = [_endpoint(i) for i in range(gpu_count)]
         self.timeout = timeout
         self.retry_attempts = retry_attempts
         self.track_requests = track_requests

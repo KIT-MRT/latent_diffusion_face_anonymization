@@ -1,5 +1,4 @@
 import cv2
-from ultralytics import YOLO
 import logging
 from pathlib import Path
 import numpy as np
@@ -10,6 +9,7 @@ from diffusion_face_anonymisation.body import Body
 
 class BodyDetector:
     def __init__(self, batch_size: int = 8):
+        from ultralytics import YOLO
         self.model = YOLO("yolo12l-person-seg-extended.pt", verbose=False)
         self.batch_size = batch_size
         logging.info(f"YOLO model loaded successfully (batch_size={batch_size}).")

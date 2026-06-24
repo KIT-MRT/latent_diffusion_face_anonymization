@@ -1,0 +1,15 @@
+# Runtime deps for the FastAPI/SAM3 server.
+# Torch + torchvision are provided by the pytorch/pytorch:2.5.1-cuda12.1 base.
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+pydantic>=2.5.0
+aiofiles>=23.2.0
+loguru>=0.7.0
+pyyaml>=6.0
+requests>=2.31
+opencv-python-headless>=4.8
+scikit-image>=0.22
+pillow>=10.0
+numpy
+transformers>=4.57.0

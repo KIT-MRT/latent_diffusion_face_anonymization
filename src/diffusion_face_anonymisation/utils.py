@@ -149,22 +149,37 @@ def fill_face_payload(init_img_b64, mask_b64) -> dict:
 
 
 def fill_body_payload(init_img_b64, mask_b64, pose_img_b64):
+    # Tuned for webcam-demo latency. Knobs, fastest-impact first:
+    #   steps × sampler       40 Euler-a → 20 DPM++ 2M Karras (same quality, ~2× faster)
+    #   controlnet.module     openpose_full → openpose (body only, skips face+hands)
+    #   cfg_scale             7 → 5.5  (less CFG-induced plastic skin at these steps)
+    #   denoising_strength    0.65 → 0.7  (people look more "different" — better anonymization)
+    #   mask_blur             new 8px — hides the inpaint seam
+    #   inpaint_full_res_padding  32 → 64  (more surrounding context → better color/light match)
     payload = {
         "init_images": ["data:image/png;base64," + init_img_b64.decode("utf-8")],
         "mask": "data:image/png;base64," + mask_b64.decode("utf-8"),
         "resize_mode": 1,
         "inpaint_full_res": True,
-        "inpaint_full_res_padding": 32,
-        "denoising_strength": 0.65,
+        "inpaint_full_res_padding": 64,
+        "mask_blur": 8,
+        "denoising_strength": 0.7,
         "inpainting_fill": 1,
-        "cfg_scale": 7,
-        "width": 512,
-        "height": 768,
+        "cfg_scale": 5.5,
+        "width": 1024,
+        "height": 1280,
         "steps": 40,
-        "sampler": "k_euler_a",
-        "prompt": "RAW photo, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3",
-        "negative_prompt": "nude, naked, nsfw, asian, ugly,(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime), text, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck",
+        "sampler_name": "DPM++ 2M SDE",
+        "scheduler": "Automatic",
+        "prompt": "RAW photo, person wearing casual clothes, 8k uhd, dslr, soft lighting, high quality, detailed face, natural skin texture, sharp focus, film grain, Fujifilm XT3",
+        # "prompt": "A person wearing casual everyday clothing, photographed with a DSLR camera, soft natural lighting, realistic documentary photograph, slight film grain",
+        "negative_prompt": "nude, naked, nsfw, asian,(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render,  sketch, cartoon, drawing, anime), text, cropped, out of frame,  worst quality, low quality, lowres, blurry, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck",
+        # "negative_prompt": "nude, naked, nsfw, cartoon, illustration, painting, unrealistic, deformed",
         "sd_model_checkpoint": "realisticVisionV60B1_v60B1InpaintingVAE.safetensors",
+        # "override_settings": {
+        #     "sd_model_checkpoint": "juggernautXL_versionXInpaint.safetensors",
+        # },
+        # "override_settings_restore_afterwards": False,
         "alwayson_scripts": {
             "controlnet": {
                 "args": [
@@ -172,6 +187,7 @@ def fill_body_payload(init_img_b64, mask_b64, pose_img_b64):
                         "image": pose_img_b64.decode("utf-8"),
                         "module": "openpose_full",
                         "model": "control_v11p_sd15_openpose [cab727d4]",
+                        # "model": "OpenPoseXL2 [f4251cb4]",
                     }
                 ]
             }
