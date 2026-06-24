@@ -9,7 +9,7 @@ Usage:
         --targets body lp --body_method lda --lp_method pixel
 
     # With config file (recommended for multi-GPU):
-    python anonymize.py --config config-everything.yaml
+    python anonymize.py --config configs/config-everything.yaml
 
     # Or with CLI args:
     python anonymize.py --image_dir /data --output_dir /out \
