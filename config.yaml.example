@@ -1,0 +1,88 @@
+# Multi-GPU Configuration for LDFA
+# Copy this file to config.yaml and adjust settings
+
+gpu:
+  # Number of GPUs to use for SD API endpoints
+  count: 4
+  
+  # Optional: manually specify GPU device IDs
+  # If not specified, will use GPUs 0 to count-1
+  device_ids: [0, 1, 2, 3]
+  
+  # Base port for SD API endpoints
+  # Will create endpoints on ports: base_port, base_port+1, ..., base_port+count-1
+  base_port: 7860
+
+api:
+  # Request timeout in seconds
+  timeout: 120
+  
+  # Number of retry attempts for failed requests
+  retry_attempts: 3
+  
+  # Connection pool size per endpoint
+  connection_pool_size: 10
+  
+  # Number of worker threads (recommended: 2-3x GPU count)
+  worker_threads: 8
+  
+  # Stable Diffusion model settings
+  model_checkpoint: "realisticVisionV60B1_v40VAE-inpainting.safetensors [82e14c46c6]"
+
+# Anonymization settings (optional - can be overridden by CLI args)
+anonymization:
+  # Default targets to anonymize: face, body, lp
+  targets: [body, lp]
+  
+  # Default detector: sam3 or yolo
+  detector: sam3
+  
+  # Anonymization methods per target
+  # Options: white, gauss, pixel, lda
+  # Note: lda requires multi_gpu mode or single SD API running
+  methods:
+    face: lda
+    body: lda
+    lp: gauss
+  
+  # Detection confidence thresholds (0.0 to 1.0)
+  thresholds:
+    body: 0.5
+    lp: 0.5
+  
+  # Detection batch size for YOLO/SAM3
+  batch_size: 8
+  
+  # Image file extension to process
+  image_extension: png
+  
+  # Resume mode - skip already processed images
+  resume: false
+
+# Paths configuration
+paths:
+  # Path to Stable Diffusion weights directory (required for multi-GPU)
+  weights_dir: /path/to/latent_diff_weights/dir
+  
+  # Default input directory (optional - can be overridden by CLI)
+  # image_dir: /data/images
+  
+  # Default output directory (optional - can be overridden by CLI)
+  # output_dir: /data/anonymized
+  
+  # Face mask directory (required only if anonymizing faces)
+  # mask_dir: /data/masks
+
+# Processing options
+processing:
+  # Enable detailed logging
+  verbose: true
+  
+  # Save batch processing state/statistics
+  save_batch_stats: true
+  
+  # Batch statistics output format (json or yaml)
+  batch_stats_format: json
+  
+  # Enable streaming pipeline mode (vs batch mode)
+  streaming: true

@@ -1,0 +1,29 @@
+# Configuration for anonymizing bodies with LDA using multi-GPU
+
+gpu:
+  count: 4
+  device_ids: [0, 1, 2, 3]
+  base_port: 7860
+
+api:
+  timeout: 120
+  retry_attempts: 3
+  worker_threads: 8
+
+anonymization:
+  targets: [body]
+  detector: sam3  # SAM3 is more accurate than YOLO
+  methods:
+    body: lda
+  thresholds:
+    body: 0.5
+  batch_size: 8
+  image_extension: png
+
+paths:
+  weights_dir: /path/to/stable-diffusion-weights
+
+processing:
+  verbose: true
+  save_batch_stats: true
+  streaming: true

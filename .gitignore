@@ -1,6 +1,62 @@
-*.pyc
-build 
-dist 
-*egg-info
-*.log
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Test outputs
+test_output/
+output/
+
+# Model weights (large files)
+*.pt
+*.pth
+*.safetensors
+weights/
+models/
+
+# Configuration with secrets
+*.local.yaml
+config.local.yaml
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated docker-compose
+docker-compose.generated.yml
+docker-compose.server.yml

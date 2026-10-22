@@ -1,7 +1,22 @@
-tensorflow==2.13.1
+torch>=2.5.0
+torchvision>=0.20.0
+torchaudio>=2.5.0
+transformers>=5.0.0
+diffusers>=0.37.0
+accelerate>=1.0.0
+tensorflow>=2.21.0
 retina-face
 pillow
 scikit-image
 pyyaml
 tqdm
 ultralytics
+opencv-python
+tabulate
+loguru
+pycocotools
+onnx
+onnxruntime
+requests
+
+#-e .

@@ -1,0 +1,32 @@
+# Configuration for anonymizing everything (face + body + license plates) with LDA
+
+gpu:
+  count: 6
+  device_ids: [0, 1, 2, 3, 4, 5]
+  base_port: 7860
+
+api:
+  timeout: 120
+  retry_attempts: 3
+  worker_threads: 16  # 2x GPU count
+
+anonymization:
+  targets: [body, lp]
+  detector: sam3
+  methods:
+    body: lda
+    lp: pixel  # License plates don't need LDA
+  thresholds:
+    body: 0.5
+    lp: 0.5
+  batch_size: 8
+  image_extension: png
+
+paths:
+  weights_dir: /path/to/stable-diffusion-weights
+  # mask_dir must be provided via CLI or set here
+
+processing:
+  verbose: true
+  save_batch_stats: true
+  streaming: true

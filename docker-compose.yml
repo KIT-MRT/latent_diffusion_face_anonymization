@@ -1,25 +1,89 @@
 services:
-  anon:
-    image: latentdiff_anon
-    build: 
-      context: .
-      dockerfile: Dockerfile
+  sd-api-gpu0:
+    image: ldfa
+    container_name: sd-api-gpu0
     ports:
-     - "7860:7860"
-    volumes:
-      # masks
-      - /path/to/mask/dir:/data/masks 
-      # images
-      - /path/to/image/dir:/data/images
-      # anonymized (output images)
-      - /path/to/anon/output/dir:/data/anonymized
-      # weights
-      - /path/to/latent_diff_weoghts/dir:/opt/gui/models/Stable-diffusion
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            device_ids: ['0']
-            capabilities: [gpu]
-    entrypoint: python3 webui.py --listen --api --xformers --enable-insecure-extension-access
+    - 7860:7860
+    environment:
+      CUDA_VISIBLE_DEVICES: '0'
+    shm_size: 16g
+    volumes: []
+    entrypoint: python3 webui.py --listen --api --xformers
+    restart: unless-stopped
+  sd-api-gpu1:
+    image: ldfa
+    container_name: sd-api-gpu1
+    ports:
+    - 7861:7860
+    environment:
+      CUDA_VISIBLE_DEVICES: '1'
+    shm_size: 16g
+    volumes: []
+    entrypoint: python3 webui.py --listen --api --xformers
+    restart: unless-stopped
+  sd-api-gpu2:
+    image: ldfa
+    container_name: sd-api-gpu2
+    ports:
+    - 7862:7860
+    environment:
+      CUDA_VISIBLE_DEVICES: '2'
+    shm_size: 16g
+    volumes: []
+    entrypoint: python3 webui.py --listen --api --xformers
+    restart: unless-stopped
+  sd-api-gpu3:
+    image: ldfa
+    container_name: sd-api-gpu3
+    ports:
+    - 7863:7860
+    environment:
+      CUDA_VISIBLE_DEVICES: '3'
+    shm_size: 16g
+    volumes: []
+    entrypoint: python3 webui.py --listen --api --xformers
+    restart: unless-stopped
+  sd-api-gpu4:
+    image: ldfa
+    container_name: sd-api-gpu4
+    ports:
+    - 7864:7860
+    environment:
+      CUDA_VISIBLE_DEVICES: '4'
+    shm_size: 16g
+    volumes: []
+    entrypoint: python3 webui.py --listen --api --xformers
+    restart: unless-stopped
+  sd-api-gpu5:
+    image: ldfa
+    container_name: sd-api-gpu5
+    ports:
+    - 7865:7860
+    environment:
+      CUDA_VISIBLE_DEVICES: '5'
+    shm_size: 16g
+    volumes: []
+    entrypoint: python3 webui.py --listen --api --xformers
+    restart: unless-stopped
+  sd-api-gpu6:
+    image: ldfa
+    container_name: sd-api-gpu6
+    ports:
+    - 7866:7860
+    environment:
+      CUDA_VISIBLE_DEVICES: '6'
+    shm_size: 16g
+    volumes: []
+    entrypoint: python3 webui.py --listen --api --xformers
+    restart: unless-stopped
+  sd-api-gpu7:
+    image: ldfa
+    container_name: sd-api-gpu7
+    ports:
+    - 7867:7860
+    environment:
+      CUDA_VISIBLE_DEVICES: '7'
+    shm_size: 16g
+    volumes: []
+    entrypoint: python3 webui.py --listen --api --xformers
+    restart: unless-stopped

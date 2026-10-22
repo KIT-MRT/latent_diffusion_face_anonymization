@@ -1,0 +1,21 @@
+# Configuration for fast anonymization (no LDA, no multi-GPU needed)
+
+anonymization:
+  targets: [body, lp]
+  detector: yolo  # Faster than SAM3
+  methods:
+    body: pixel
+    lp: gauss
+  thresholds:
+    body: 0.5
+    lp: 0.5
+  batch_size: 16  # Larger batch for faster detection
+  image_extension: png
+
+paths:
+  # No weights_dir needed - not using LDA
+
+processing:
+  verbose: false
+  save_batch_stats: false
+  streaming: true

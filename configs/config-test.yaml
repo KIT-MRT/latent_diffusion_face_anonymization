@@ -1,0 +1,37 @@
+# Test configuration for anonymization from config file
+
+gpu:
+  count: 2
+  device_ids: [0, 1]
+  base_port: 7860
+
+api:
+  timeout: 120
+  retry_attempts: 3
+  worker_threads: 4
+
+# Anonymization settings
+anonymization:
+  targets: [body, lp]
+  detector: yolo
+  methods:
+    body: pixel
+    lp: gauss
+  thresholds:
+    body: 0.5
+    lp: 0.5
+  batch_size: 8
+  image_extension: png
+  resume: false
+
+# Paths
+paths:
+  weights_dir: /path/to/weights
+  image_dir: test/leftImg8Bit/val/frankfurt
+  output_dir: test_output/config_based_test
+
+# Processing
+processing:
+  verbose: true
+  save_batch_stats: true
+  streaming: true

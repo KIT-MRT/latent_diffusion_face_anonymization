@@ -1,0 +1,44 @@
+# Multi-GPU Configuration for LDFA - Test Configuration
+# This is a minimal config for testing with 2 GPUs
+
+gpu:
+  # Number of GPUs to use for SD API endpoints
+  count: 8
+  
+  # Manually specify GPU device IDs (adjust based on your system)
+  device_ids: [0, 1, 2, 3, 4, 5, 6, 7]
+  
+  # Base port for SD API endpoints
+  # Will create endpoints on ports: 7860, 7861
+  base_port: 7860
+
+api:
+  # Request timeout in seconds
+  timeout: 120
+  
+  # Number of retry attempts for failed requests
+  retry_attempts: 3
+  
+  # Connection pool size per endpoint
+  connection_pool_size: 10
+  
+  # Number of worker threads (2x GPU count for good pipeline utilization)
+  worker_threads: 4
+  
+  # Stable Diffusion model settings
+  model_checkpoint: "realisticVisionV60B1_v40VAE-inpainting.safetensors [82e14c46c6]"
+
+# Paths configuration
+paths:
+  weights_dir: /workspace/models/Stable-diffusion
+
+# Processing options
+processing:
+  # Enable detailed logging
+  verbose: true
+  
+  # Save batch processing state/statistics
+  save_batch_stats: true
+  
+  # Batch statistics output format (json or yaml)
+  batch_stats_format: json
